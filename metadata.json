@@ -1,0 +1,5 @@
+{
+  "name": "MST - Marty Solar Tracker 2",
+  "description": "Mobile-first PWA for solar farm construction management. Optimized for offline use and one-handed operation on iOS.",
+  "requestFramePermissions": []
+}
