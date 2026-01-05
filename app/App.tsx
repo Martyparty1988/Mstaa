@@ -13,6 +13,9 @@ import { ProjectSettings } from '../features/project/ProjectSettings';
 import { GlobalTabBar, GlobalTab } from '../ui/GlobalTabBar';
 import { WorkType } from '../domain';
 
+// Extend GlobalTab type locally or just use string literal in state
+type ExtendedGlobalTab = GlobalTab | 'TEAM_GLOBAL';
+
 const App = () => {
   const {
     view, setView: setEngineView,
@@ -25,7 +28,7 @@ const App = () => {
 
   // Extend the view state to include SETTINGS which is handled at the app level
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [globalTab, setGlobalTab] = useState<GlobalTab>('DASHBOARD');
+  const [globalTab, setGlobalTab] = useState<ExtendedGlobalTab>('DASHBOARD');
 
   // Helper to handle routing
   const setView = (v: typeof view) => {
@@ -53,7 +56,9 @@ const App = () => {
           return (
             <FieldMap 
               key={activeProject.id} 
-              project={activeProject} 
+              project={activeProject}
+              logs={workLogs.filter(l => l.projectId === activeProject.id)}
+              workers={workers}
               onBack={() => setView('DASHBOARD')} 
               onSave={(data) => actions.saveWork({ ...data, type: WorkType.TABLE })}
               onNavigate={(target) => setProjectTab(target)}
@@ -113,6 +118,8 @@ const App = () => {
   // --- 4. GLOBAL APP NAVIGATION (Root - WITH BOTTOM BAR) ---
   
   const isGlobalChatOpen = globalTab === 'CHAT';
+  // Cast back to specific type for TabBar props
+  const activeTabBarTab = (globalTab === 'TEAM_GLOBAL' ? 'DASHBOARD' : globalTab) as GlobalTab;
 
   const renderGlobalContent = () => {
     // If Global Chat is open, render it ON TOP of dashboard/projects
@@ -139,6 +146,7 @@ const App = () => {
             onCreateNew={() => setView('CREATE')} 
             onLogHourly={actions.logHourly}
             onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenTeam={() => setGlobalTab('TEAM_GLOBAL')}
             snapshot={todaySnapshot}
             viewMode="OVERVIEW"
           />
@@ -152,6 +160,7 @@ const App = () => {
             onCreateNew={() => setView('CREATE')} 
             onLogHourly={actions.logHourly}
             onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenTeam={() => setGlobalTab('TEAM_GLOBAL')}
             snapshot={todaySnapshot}
             viewMode="PROJECTS_LIST"
           />
@@ -165,6 +174,15 @@ const App = () => {
             onBack={() => setGlobalTab('DASHBOARD')} 
           />
         );
+      case 'TEAM_GLOBAL':
+        return (
+          <TeamManager 
+             workers={workers} 
+             onUpdateWorker={actions.updateWorker} 
+             onAddWorker={actions.addWorker} 
+             onBack={() => setGlobalTab('DASHBOARD')} 
+          />
+        );
       default:
         return null;
     }
@@ -174,12 +192,12 @@ const App = () => {
     <div className="relative h-[100dvh] flex flex-col">
       {renderGlobalContent()}
       
-      {/* Tab Bar slides down when chat is open */}
+      {/* Tab Bar slides down when chat is open OR when viewing global team manager */}
       <GlobalTabBar 
-        activeTab={globalTab} 
-        onSwitch={setGlobalTab} 
+        activeTab={activeTabBarTab} 
+        onSwitch={(t) => setGlobalTab(t)} 
         unreadCount={0} 
-        isVisible={!isGlobalChatOpen}
+        isVisible={!isGlobalChatOpen && globalTab !== 'TEAM_GLOBAL'}
       />
     </div>
   );

@@ -10,7 +10,7 @@ interface ChatScreenProps {
   projects: Project[];
   initialChannelId?: string; 
   onClose: () => void;
-  onAddMessage: (text: string, channelId: string, attachments?: string[]) => void;
+  onAddMessage: (text: string, channelId: string) => void;
 }
 
 export const ChatScreen: React.FC<ChatScreenProps> = ({ 
@@ -34,7 +34,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     if (!activeChannelId) return [];
     return logs
       .filter(l => l.projectId === activeChannelId) 
-      .filter(l => (l.note || (l.attachments && l.attachments.length > 0)) && (l.durationMinutes || 0) === 0 && l.type === WorkType.HOURLY)
+      .filter(l => l.note && (l.durationMinutes || 0) === 0 && l.type === WorkType.HOURLY)
       .sort((a, b) => a.timestamp - b.timestamp);
   }, [logs, activeChannelId]);
 
@@ -76,7 +76,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
             subTitle={subTitle}
             onBack={() => setActiveChannelId(null)}
             onClose={onClose}
-            onAddMessage={(text, attachments) => onAddMessage(text, activeChannelId, attachments)}
+            onAddMessage={(text) => onAddMessage(text, activeChannelId)}
          />
        ) : (
          <ChannelList 

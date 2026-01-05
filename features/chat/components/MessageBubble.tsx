@@ -38,15 +38,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ log, isMe, showAva
             : 'bg-surfaceHighlight/90 backdrop-blur-md text-white/95 rounded-[20px] rounded-tl-sm border border-white/5'
           }
         `}>
-           {/* Image Attachments */}
-           {log.attachments && log.attachments.length > 0 && (
-             <div className="mb-2 -mx-1 -mt-1">
-               {log.attachments.map((src, i) => (
-                 <img key={i} src={src} alt="attachment" className="rounded-xl w-full h-auto object-cover max-h-60 border border-black/10" />
-               ))}
-             </div>
-           )}
-
            {/* Text Content */}
            {log.note && <span>{log.note}</span>}
 

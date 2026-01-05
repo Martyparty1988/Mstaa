@@ -37,8 +37,8 @@ export interface Worker {
   id: string;
   name: string;
   role: WorkerRole;
-  rateHourly?: number;
-  rateString?: number; 
+  rateHourly?: number; // CZK per hour
+  rateString?: number; // CZK per string
   isActive: boolean;
   avatarColor?: string;
 }
@@ -82,7 +82,6 @@ export interface WorkLog {
   tableIds?: string[]; // Preferred
   size?: TableSize; 
   note?: string;
-  attachments?: string[]; // Base64 strings or URLs for Chat
   timestamp: number;
   startTime?: number;
   endTime?: number;

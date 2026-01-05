@@ -10,6 +10,7 @@ interface DashboardProps {
   onCreateNew: () => void;
   onLogHourly: (activity: string, duration: number, start: string, end: string) => void;
   onOpenSettings: () => void;
+  onOpenTeam: () => void; // New prop
   snapshot: PerformanceSnapshot;
   viewMode?: 'OVERVIEW' | 'PROJECTS_LIST';
 }
@@ -21,6 +22,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onCreateNew, 
   onLogHourly, 
   onOpenSettings,
+  onOpenTeam,
   snapshot,
   viewMode = 'OVERVIEW'
 }) => {
@@ -165,11 +167,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </div>
              </button>
              
-             {/* Future Expansion Slot */}
-             <div className="p-4 rounded-2xl border border-white/5 flex items-center gap-3 opacity-30">
-                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">?</div>
-                <div className="text-[10px] font-bold text-white uppercase tracking-widest">Brzy...</div>
-             </div>
+             {/* Team Management Shortcut */}
+             <button 
+                onClick={onOpenTeam}
+                className="glass-base p-4 rounded-2xl flex items-center gap-3 active:scale-95 transition-all hover:bg-white/5 border-white/10"
+             >
+                <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center border border-blue-500/20">👷</div>
+                <div className="text-left">
+                   <div className="text-sm font-bold text-white">Správa týmu</div>
+                   <div className="text-[9px] text-white/40 font-bold uppercase tracking-wider">Karty & Platy</div>
+                </div>
+             </button>
           </div>
 
         </div>
@@ -237,4 +245,4 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </div>
     </Layout>
   );
-};
+}

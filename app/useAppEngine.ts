@@ -162,7 +162,7 @@ export const useAppEngine = () => {
     setWorkLogs(prev => [newLog, ...prev]);
   };
 
-  const addNote = (text: string, channelId?: string, attachments?: string[]) => {
+  const addNote = (text: string, channelId?: string) => {
     // channelId can be a projectId OR a "dm_id1_id2" string
     const newLog: WorkLog = {
       id: Date.now().toString(),
@@ -172,8 +172,7 @@ export const useAppEngine = () => {
       timestamp: Date.now(),
       synced: false,
       durationMinutes: 0,
-      note: text,
-      attachments: attachments
+      note: text
     };
     setWorkLogs(prev => [newLog, ...prev]);
   };
