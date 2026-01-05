@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout } from '../components/Layout';
+import { Layout } from '../../ui/Layout';
 
 export const Settings = ({ onBack }: { onBack: () => void }) => {
   return (
@@ -55,7 +55,7 @@ export const Settings = ({ onBack }: { onBack: () => void }) => {
           
           <div className="text-center py-6">
              <div className="text-xs font-bold text-white/30 mb-1">MST – Marty Solar Tracker</div>
-             <div className="text-[10px] text-white/20 font-mono">v2.1.0 • Build 240</div>
+             <div className="text-[10px] text-white/20 font-mono">v2.2.0 • Architecture Refactor</div>
           </div>
        </div>
     </Layout>

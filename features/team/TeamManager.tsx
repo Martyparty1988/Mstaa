@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Worker, WorkerRole } from '../types';
-import { Layout } from '../components/Layout';
-import { Button } from '../components/Button';
+import { Worker, WorkerRole } from '../../domain';
+import { Layout } from '../../ui/Layout';
+import { Button } from '../../ui/Button';
 
 interface TeamManagerProps {
   workers: Worker[];
@@ -97,7 +97,6 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ workers, onUpdateWorke
         <div className="h-20" /> {/* Spacer */}
       </div>
 
-      {/* Floating Add Button */}
       <button 
         onClick={() => setShowAdd(true)}
         className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 w-14 h-14 bg-solar-gradient text-white rounded-full shadow-glow flex items-center justify-center z-40 active:scale-90 transition-transform"
@@ -107,7 +106,6 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ workers, onUpdateWorke
         </svg>
       </button>
 
-      {/* Add Worker Modal */}
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm animate-fade-in" onClick={() => setShowAdd(false)}>
           <div className="bg-surface w-full rounded-t-3xl p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] border-t border-white/10 space-y-6" onClick={e => e.stopPropagation()}>
