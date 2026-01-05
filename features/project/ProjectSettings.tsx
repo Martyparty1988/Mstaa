@@ -32,7 +32,7 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ project, onUpd
     onUpdate({
       ...project,
       settings: {
-        currency: project.settings?.currency || 'CZK',
+        currency: 'EUR', // Force EUR
         kwpPerString: settings.kwp,
         stringsPerTable: {
           default: 1.5,

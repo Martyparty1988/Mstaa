@@ -1,4 +1,5 @@
 
+
 // --- ENUMS ---
 
 export enum ProjectMode {
@@ -37,8 +38,8 @@ export interface Worker {
   id: string;
   name: string;
   role: WorkerRole;
-  rateHourly?: number; // CZK per hour
-  rateString?: number; // CZK per string
+  rateHourly?: number; // EUR per hour
+  rateString?: number; // EUR per string
   isActive: boolean;
   avatarColor?: string;
 }
@@ -51,7 +52,7 @@ export interface ProjectSettings {
     default: number;
   };
   kwpPerString: number; // Avg kWp per string
-  currency: string;
+  currency: string; // 'EUR'
 }
 
 export interface Table {
@@ -88,6 +89,24 @@ export interface WorkLog {
   durationMinutes: number;
   synced: boolean;
   status?: TableStatus;
+}
+
+// --- DATA LAYER SCHEMA ---
+
+export interface AppSchema {
+  projects: Project[];
+  logs: WorkLog[];
+  workers: Worker[];
+}
+
+export interface AppBackup {
+  meta: {
+    version: number;
+    timestamp: number;
+    appName: string;
+    exportedBy: string;
+  };
+  data: AppSchema;
 }
 
 // --- METRICS ---

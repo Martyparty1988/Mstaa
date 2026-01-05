@@ -6,15 +6,17 @@ import { Dashboard } from '../features/dashboard/Dashboard';
 import { CreateProject } from '../features/project/CreateProject';
 import { FieldMap } from '../features/field/FieldMap';
 import { ChatScreen } from '../features/chat/ChatScreen';
+import { RecordsScreen } from '../features/records/RecordsScreen'; 
 import { TeamManager } from '../features/team/TeamManager';
 import { Stats } from '../features/stats/Stats';
 import { Settings } from '../features/settings/Settings';
 import { ProjectSettings } from '../features/project/ProjectSettings';
+import { WalletScreen } from '../features/wallet/WalletScreen'; // Import Wallet
 import { GlobalTabBar, GlobalTab } from '../ui/GlobalTabBar';
 import { WorkType } from '../domain';
 
 // Extend GlobalTab type locally or just use string literal in state
-type ExtendedGlobalTab = GlobalTab | 'TEAM_GLOBAL';
+type ExtendedGlobalTab = GlobalTab | 'TEAM_GLOBAL' | 'WALLET';
 
 const App = () => {
   const {
@@ -29,6 +31,9 @@ const App = () => {
   // Extend the view state to include SETTINGS which is handled at the app level
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [globalTab, setGlobalTab] = useState<ExtendedGlobalTab>('DASHBOARD');
+  
+  // Track specific chat conversation state for UI visibility
+  const [globalChatId, setGlobalChatId] = useState<string | null>(null);
 
   // Helper to handle routing
   const setView = (v: typeof view) => {
@@ -40,7 +45,18 @@ const App = () => {
 
   // --- 1. SETTINGS OVERLAY (Modal) ---
   if (isSettingsOpen) {
-    return <Settings onBack={() => setIsSettingsOpen(false)} />;
+    return (
+      <Settings 
+        onBack={() => setIsSettingsOpen(false)} 
+        currentUser={currentUser}
+        onUpdateUser={actions.updateWorker}
+        activeProject={activeProject}
+        onResetApp={actions.fullReset}
+        onImportApp={actions.importAppState}
+        onGetExportData={actions.getExportData}
+        onDownloadBackup={actions.downloadBackup}
+      />
+    );
   }
 
   // --- 2. PROJECT CREATION FLOW ---
@@ -78,6 +94,7 @@ const App = () => {
             <Stats 
               logs={workLogs.filter(l => l.projectId === activeProject.id)} 
               workers={workers} 
+              project={activeProject}
               onBack={() => setProjectTab('MAP')} 
             />
           );
@@ -91,6 +108,19 @@ const App = () => {
               initialChannelId={activeProject.id}
               onClose={() => setProjectTab('MAP')} 
               onAddMessage={actions.addNote} 
+            />
+          );
+        case 'RECORDS':
+          // The new Records Screen
+          return (
+            <RecordsScreen
+              logs={workLogs}
+              workers={workers}
+              project={activeProject}
+              onBack={() => setProjectTab('MAP')}
+              onUpdate={actions.updateLog}
+              onDelete={actions.deleteLog}
+              onDuplicate={actions.duplicateLog}
             />
           );
         case 'MENU':
@@ -118,8 +148,12 @@ const App = () => {
   // --- 4. GLOBAL APP NAVIGATION (Root - WITH BOTTOM BAR) ---
   
   const isGlobalChatOpen = globalTab === 'CHAT';
+  
+  // Logic: Tab Bar is HIDDEN if (We are in Chat Tab AND a specific conversation is open) OR (We are in Team Global) OR (Wallet)
+  const isTabBarVisible = !(isGlobalChatOpen && globalChatId !== null) && globalTab !== 'TEAM_GLOBAL' && globalTab !== 'WALLET';
+
   // Cast back to specific type for TabBar props
-  const activeTabBarTab = (globalTab === 'TEAM_GLOBAL' ? 'DASHBOARD' : globalTab) as GlobalTab;
+  const activeTabBarTab = (globalTab === 'TEAM_GLOBAL' || globalTab === 'WALLET' ? 'DASHBOARD' : globalTab) as GlobalTab;
 
   const renderGlobalContent = () => {
     // If Global Chat is open, render it ON TOP of dashboard/projects
@@ -130,8 +164,12 @@ const App = () => {
            currentUser={currentUser}
            allWorkers={workers}
            projects={projects}
-           onClose={() => setGlobalTab('DASHBOARD')}
+           onClose={() => {
+             setGlobalTab('DASHBOARD');
+             setGlobalChatId(null);
+           }}
            onAddMessage={actions.addNote}
+           onChannelSwitch={(id) => setGlobalChatId(id)}
         />
       );
     }
@@ -147,8 +185,11 @@ const App = () => {
             onLogHourly={actions.logHourly}
             onOpenSettings={() => setIsSettingsOpen(true)}
             onOpenTeam={() => setGlobalTab('TEAM_GLOBAL')}
+            onOpenWallet={() => setGlobalTab('WALLET')}
             snapshot={todaySnapshot}
             viewMode="OVERVIEW"
+            currentUser={currentUser}
+            workLogs={workLogs}
           />
         );
       case 'PROJECTS':
@@ -161,6 +202,7 @@ const App = () => {
             onLogHourly={actions.logHourly}
             onOpenSettings={() => setIsSettingsOpen(true)}
             onOpenTeam={() => setGlobalTab('TEAM_GLOBAL')}
+            onOpenWallet={() => setGlobalTab('WALLET')}
             snapshot={todaySnapshot}
             viewMode="PROJECTS_LIST"
           />
@@ -183,6 +225,15 @@ const App = () => {
              onBack={() => setGlobalTab('DASHBOARD')} 
           />
         );
+      case 'WALLET':
+        return (
+          <WalletScreen 
+            logs={workLogs}
+            currentUser={currentUser}
+            projects={projects}
+            onBack={() => setGlobalTab('DASHBOARD')}
+          />
+        );
       default:
         return null;
     }
@@ -192,12 +243,12 @@ const App = () => {
     <div className="relative h-[100dvh] flex flex-col">
       {renderGlobalContent()}
       
-      {/* Tab Bar slides down when chat is open OR when viewing global team manager */}
+      {/* Tab Bar slides down when specific chat conversation is open OR when viewing global team manager */}
       <GlobalTabBar 
         activeTab={activeTabBarTab} 
         onSwitch={(t) => setGlobalTab(t)} 
         unreadCount={0} 
-        isVisible={!isGlobalChatOpen && globalTab !== 'TEAM_GLOBAL'}
+        isVisible={isTabBarVisible}
       />
     </div>
   );

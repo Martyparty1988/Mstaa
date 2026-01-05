@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Project, ProjectMode, TableSize, WorkLog, WorkType, Table, TableStatus, Worker, WorkerRole, createPerformanceSnapshot, PerformanceSnapshot } from '../domain';
+import { Project, ProjectMode, TableSize, WorkLog, WorkType, Table, TableStatus, Worker, WorkerRole, createPerformanceSnapshot, PerformanceSnapshot, AppBackup } from '../domain';
 import { storage, KEYS } from '../lib/storage';
+import { dataManager } from '../lib/dataManager';
 
 export const useAppEngine = () => {
   const [view, setView] = useState<'DASHBOARD' | 'CREATE' | 'PROJECT_VIEW'>('DASHBOARD');
-  const [projectTab, setProjectTab] = useState<'MAP' | 'TEAM' | 'STATS' | 'CHAT' | 'MENU'>('MAP');
+  const [projectTab, setProjectTab] = useState<'MAP' | 'TEAM' | 'STATS' | 'CHAT' | 'RECORDS' | 'MENU'>('MAP');
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
@@ -140,6 +141,53 @@ export const useAppEngine = () => {
     }
   };
 
+  // --- LOG MANAGEMENT ACTIONS ---
+
+  const updateLog = (logId: string, updates: Partial<WorkLog>) => {
+    setWorkLogs(prev => prev.map(log => {
+      if (log.id === logId) {
+        return { ...log, ...updates, synced: false }; // Mark as unsynced on edit
+      }
+      return log;
+    }));
+  };
+
+  const deleteLog = (logId: string) => {
+    const logToDelete = workLogs.find(l => l.id === logId);
+    setWorkLogs(prev => prev.filter(l => l.id !== logId));
+
+    // Revert table status if it was a table log
+    if (logToDelete && logToDelete.type === WorkType.TABLE && activeProject && (logToDelete.tableIds || logToDelete.tableId)) {
+       const idsToRevert = new Set(logToDelete.tableIds || [logToDelete.tableId!]);
+       const updatedTables = (activeProject.tables || []).map(t => {
+         if (idsToRevert.has(t.id)) {
+            // Revert to Pending. Real-world app might need "Previous Status" logic or just generic PENDING.
+            return { ...t, status: TableStatus.PENDING };
+         }
+         return t;
+       });
+       
+       const completedCount = updatedTables.filter(t => t.status === TableStatus.DONE).length;
+       updateProject({ ...activeProject, tables: updatedTables, completedTables: completedCount });
+    }
+  };
+
+  const duplicateLog = (logId: string) => {
+    const log = workLogs.find(l => l.id === logId);
+    if (!log) return;
+
+    const newLog: WorkLog = {
+      ...log,
+      id: Date.now().toString(),
+      timestamp: Date.now(),
+      synced: false,
+      startTime: undefined,
+      endTime: undefined, 
+    };
+    
+    setWorkLogs(prev => [newLog, ...prev]);
+  };
+
   const logHourly = (activity: string, duration: number, start: string, end: string) => {
     if (!activeProject) return;
     const now = new Date();
@@ -163,12 +211,11 @@ export const useAppEngine = () => {
   };
 
   const addNote = (text: string, channelId?: string) => {
-    // channelId can be a projectId OR a "dm_id1_id2" string
     const newLog: WorkLog = {
       id: Date.now().toString(),
       projectId: channelId || activeProject?.id || 'GLOBAL',
       workerId: 'CURRENT_USER',
-      type: WorkType.HOURLY, // Using Hourly as generic type for notes currently
+      type: WorkType.HOURLY,
       timestamp: Date.now(),
       synced: false,
       durationMinutes: 0,
@@ -196,7 +243,6 @@ export const useAppEngine = () => {
       const date = new Date(l.timestamp).toLocaleDateString();
       const time = new Date(l.timestamp).toLocaleTimeString();
       const tables = l.tableIds ? l.tableIds.join(';') : (l.tableId || '');
-      // Clean note for CSV (remove commas/newlines)
       const cleanNote = (l.note || '').replace(/[\n,]/g, ' ');
       
       return `${l.timestamp},${date},${time},${l.workerId},${l.type},"${tables}",${l.size || ''},${l.status || ''},${l.durationMinutes},"${cleanNote}"`;
@@ -214,6 +260,59 @@ export const useAppEngine = () => {
     document.body.removeChild(link);
   };
 
+  // --- DATA MANAGEMENT ---
+
+  const fullReset = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
+  const importAppState = (jsonData: string, mode: 'REPLACE' | 'MERGE' = 'REPLACE') => {
+    try {
+      // 1. Parse Data
+      let backup: AppBackup;
+      
+      try {
+        const parsed = JSON.parse(jsonData);
+        // Simple heuristic to check if it's our format
+        if (parsed.meta && parsed.data) {
+          backup = parsed;
+        } else {
+          // Legacy format fallback (direct storage dump)
+          console.warn("Legacy format detected, wrapping...");
+          backup = {
+            meta: { version: 0, timestamp: Date.now(), appName: 'MST_SOLAR_TRACKER', exportedBy: 'UNKNOWN' },
+            data: parsed
+          };
+        }
+      } catch (e) {
+        alert("Chyba: Neplatný JSON formát.");
+        return;
+      }
+
+      // 2. Perform Restore using DataManager
+      const success = dataManager.restoreBackup(backup, mode);
+
+      if (success) {
+        window.location.reload();
+      } else {
+        alert("Chyba při obnově dat.");
+      }
+    } catch (e) {
+      alert("Kritická chyba při importu.");
+      console.error(e);
+    }
+  };
+
+  const getExportData = () => {
+    // Legacy support wrapper, preferring DataManager
+    return JSON.stringify(dataManager.createBackup(), null, 2);
+  };
+
+  const downloadBackup = () => {
+    dataManager.downloadBackup();
+  };
+
   return {
     view, setView,
     projectTab, setProjectTab,
@@ -229,7 +328,14 @@ export const useAppEngine = () => {
       updateWorker,
       addWorker,
       updateProject,
-      exportProjectData
+      exportProjectData,
+      updateLog,
+      deleteLog,
+      duplicateLog,
+      fullReset,
+      importAppState,
+      getExportData,
+      downloadBackup
     }
   };
 };

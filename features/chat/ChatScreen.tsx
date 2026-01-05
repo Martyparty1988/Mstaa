@@ -11,6 +11,8 @@ interface ChatScreenProps {
   initialChannelId?: string; 
   onClose: () => void;
   onAddMessage: (text: string, channelId: string) => void;
+  // New prop to notify parent when user enters/leaves a conversation
+  onChannelSwitch?: (channelId: string | null) => void;
 }
 
 export const ChatScreen: React.FC<ChatScreenProps> = ({ 
@@ -20,13 +22,24 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   projects, 
   initialChannelId, 
   onClose, 
-  onAddMessage 
+  onAddMessage,
+  onChannelSwitch
 }) => {
   const [activeChannelId, setActiveChannelId] = useState<string | null>(initialChannelId || null);
 
   useEffect(() => {
-    if (initialChannelId) setActiveChannelId(initialChannelId);
-  }, [initialChannelId]);
+    if (initialChannelId) {
+      setActiveChannelId(initialChannelId);
+      // Notify parent if initial channel is set
+      if (onChannelSwitch) onChannelSwitch(initialChannelId);
+    }
+  }, [initialChannelId, onChannelSwitch]);
+
+  // Wrapper to sync local state and parent notification
+  const handleChannelSwitch = (id: string | null) => {
+    setActiveChannelId(id);
+    if (onChannelSwitch) onChannelSwitch(id);
+  };
 
   // --- DERIVED STATE FOR CONVERSATION ---
   
@@ -67,14 +80,15 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   // --- RENDER ---
 
   return (
-    <div className="fixed inset-0 z-[100] bg-midnight flex flex-col">
+    // Changed from fixed z-[100] to relative h-full to allow GlobalTabBar (z-50) to sit on top in List View
+    <div className="relative h-full bg-midnight flex flex-col overflow-hidden">
        {activeChannelId ? (
          <ChatConversation 
             logs={filteredLogs}
             currentUser={currentUser}
             channelName={title}
             subTitle={subTitle}
-            onBack={() => setActiveChannelId(null)}
+            onBack={() => handleChannelSwitch(null)}
             onClose={onClose}
             onAddMessage={(text) => onAddMessage(text, activeChannelId)}
          />
@@ -83,7 +97,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
             projects={projects}
             allWorkers={allWorkers}
             currentUser={currentUser}
-            onSelect={setActiveChannelId}
+            onSelect={handleChannelSwitch}
             onClose={onClose}
          />
        )}

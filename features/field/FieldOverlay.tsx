@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Table, TableSize, TableStatus } from '../../domain';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Table, TableSize, TableStatus, ProjectSettings, getStringsForSize, stringsToKwp } from '../../domain';
 import { storage, KEYS } from '../../lib/storage';
 import { TimeRangePicker } from '../../ui/TimeRangePicker';
 
 interface FieldOverlayProps {
   isOpen: boolean;
   projectTables: Table[];
+  settings?: ProjectSettings; // Added to support correct kWp calculations
   selectedIds: Set<string>;
   onClose: () => void;
   onClearSelection: () => void;
@@ -18,7 +19,7 @@ interface FieldOverlayProps {
     note?: string; 
     status?: TableStatus 
   }) => void;
-  focusedId?: string; // New prop for scrolling to specific item
+  focusedId?: string;
 }
 
 const ISSUE_TAGS = [
@@ -30,7 +31,7 @@ const ISSUE_TAGS = [
   "Jiné"
 ];
 
-// Helper Sub-component for Size Toggling within Overlay
+// Helper: Size Row
 const SizeRow: React.FC<{ 
   label: string; 
   currentSize: TableSize; 
@@ -58,7 +59,8 @@ const SizeRow: React.FC<{
 
 export const FieldOverlay: React.FC<FieldOverlayProps> = ({ 
   isOpen, 
-  projectTables, 
+  projectTables,
+  settings, 
   selectedIds, 
   onClose, 
   onClearSelection, 
@@ -74,33 +76,51 @@ export const FieldOverlay: React.FC<FieldOverlayProps> = ({
   const [issueReason, setIssueReason] = useState<string | null>(null);
   const [issueNote, setIssueNote] = useState("");
   
-  // UI Mode: DEFAULT (Sizes/Context) | TIME (Picker) | ACTIONS (Issues/Progress) | ISSUE_DETAIL
-  const [mode, setMode] = useState<'DEFAULT' | 'TIME' | 'ACTIONS' | 'ISSUE_DETAIL'>('DEFAULT');
+  // UI Mode
+  const [mode, setMode] = useState<'DEFAULT' | 'TIME' | 'ACTIONS' | 'ISSUE_DETAIL' | 'EXIT_CONFIRM'>('DEFAULT');
 
-  // Refs for scrolling
+  // Refs
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Initialize sizes when selection changes
+  // Reset state on Open
   useEffect(() => {
     if (isOpen) {
       const newSizes: Record<string, TableSize> = {};
       selectedIds.forEach(id => {
         const t = projectTables.find(table => table.id === id);
-        if (t) newSizes[id] = t.size || TableSize.MEDIUM;
+        if (t) newSizes[id] = t.size || TableSize.MEDIUM; // Default to Medium if undefined
       });
       setPendingSizes(newSizes);
-      setMode('DEFAULT'); // Reset mode on open
+      setMode('DEFAULT');
       setIssueReason(null);
       setIssueNote("");
     }
   }, [isOpen, selectedIds, projectTables]);
 
-  // Scroll to focused item logic
+  // Scroll to focus
   useEffect(() => {
     if (isOpen && focusedId && rowRefs.current[focusedId]) {
       rowRefs.current[focusedId]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [focusedId, isOpen]);
+
+  // --- Live Metrics Calculation ---
+  const liveStats = useMemo(() => {
+    let totalStrings = 0;
+    const tableCount = selectedIds.size;
+
+    selectedIds.forEach(id => {
+      const size = pendingSizes[id] || TableSize.MEDIUM;
+      totalStrings += getStringsForSize(size, settings);
+    });
+
+    const totalKwp = stringsToKwp(totalStrings, settings);
+
+    return { tableCount, totalStrings, totalKwp };
+  }, [selectedIds, pendingSizes, settings]);
+
+
+  // --- Handlers ---
 
   const handleSizeChange = (id: string, size: TableSize) => {
     setPendingSizes(prev => ({ ...prev, [id]: size }));
@@ -117,6 +137,18 @@ export const FieldOverlay: React.FC<FieldOverlayProps> = ({
     const next = worker === "JÁ" ? "TÝM" : "JÁ";
     setWorker(next);
     storage.set(KEYS.LAST_WORKER, next);
+  };
+
+  const handleSafeClose = () => {
+    // Basic "Dirty" check - simply checking if open is enough for this context as sizes are pre-filled
+    // But for better UX, we assume if user opened overlay, they intended to do something.
+    // We only block if they actually changed something or selected Time/Action mode.
+    // For simplicity in "Core Loop", we add a lightweight confirmation if tables are selected.
+    if (selectedIds.size > 0) {
+      setMode('EXIT_CONFIRM');
+    } else {
+      onClose();
+    }
   };
 
   const executeSave = (status: TableStatus) => {
@@ -138,7 +170,7 @@ export const FieldOverlay: React.FC<FieldOverlayProps> = ({
       finalNote = parts.length > 0 ? parts.join(": ") : "Nespecifikovaný problém";
     }
 
-    // Group by size to save efficiently
+    // Batch Save Logic: Group IDs by Size to optimize Reducer calls
     const idsBySize: Record<string, string[]> = {};
     selectedIds.forEach(id => {
       const size = pendingSizes[id] || TableSize.MEDIUM;
@@ -162,15 +194,17 @@ export const FieldOverlay: React.FC<FieldOverlayProps> = ({
     onClearSelection();
   };
 
-  // Derived List
+  // List of tables being edited
   const selectedList = projectTables.filter(t => selectedIds.has(t.id));
 
+  // --- RENDER ---
   return (
     <div 
-      className={`fixed bottom-0 left-0 w-full bg-midnight/95 backdrop-blur-xl rounded-t-[32px] border-t border-white/10 shadow-[0_-20px_60px_rgba(0,0,0,0.6)] transition-transform duration-300 z-50 flex flex-col max-h-[85vh] ${isOpen ? 'translate-y-0' : 'translate-y-[110%]'}`}
+      className={`fixed bottom-0 left-0 w-full bg-midnight/95 backdrop-blur-xl rounded-t-[32px] border-t border-white/10 shadow-[0_-20px_60px_rgba(0,0,0,0.6)] transition-transform duration-300 z-50 flex flex-col max-h-[92vh] ${isOpen ? 'translate-y-0' : 'translate-y-[110%]'}`}
       style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
     >
-      <div className="w-full flex justify-center pt-3 pb-2 cursor-pointer active:opacity-50 flex-shrink-0" onClick={onClose}>
+      {/* Handle / Drag Indicator */}
+      <div className="w-full flex justify-center pt-3 pb-2 cursor-pointer active:opacity-50 flex-shrink-0" onClick={handleSafeClose}>
         <div className="w-12 h-1.5 bg-white/20 rounded-full" />
       </div>
 
@@ -179,17 +213,42 @@ export const FieldOverlay: React.FC<FieldOverlayProps> = ({
         {/* Header */}
         <div className="flex justify-between items-end min-h-[2rem] flex-shrink-0">
           <h3 className="text-3xl font-black text-white leading-none tracking-tight text-shadow-sm">
-            {selectedIds.size} <span className="text-lg font-bold text-white/40">vybráno</span>
+            {mode === 'EXIT_CONFIRM' ? 'Zahodit změny?' : (
+              <>
+                {selectedIds.size} <span className="text-lg font-bold text-white/40">vybráno</span>
+              </>
+            )}
           </h3>
-          <button onClick={() => { onClearSelection(); onClose(); }} className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-3 py-1 bg-white/5 rounded-lg border border-white/5">
-            Zrušit
-          </button>
+          {mode !== 'EXIT_CONFIRM' && (
+            <button onClick={handleSafeClose} className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-3 py-1 bg-white/5 rounded-lg border border-white/5 active:bg-white/10 transition-colors">
+              Zrušit
+            </button>
+          )}
         </div>
 
-        {mode === 'DEFAULT' ? (
+        {/* --- EXIT CONFIRMATION MODE --- */}
+        {mode === 'EXIT_CONFIRM' ? (
+           <div className="flex-1 flex flex-col justify-center gap-4 animate-fade-in pb-8">
+              <p className="text-white/60 text-center font-medium">Máte rozpracovaný záznam. Chcete jej zahodit a zavřít okno?</p>
+              <div className="grid grid-cols-2 gap-4">
+                 <button 
+                   onClick={() => setMode('DEFAULT')} 
+                   className="py-4 rounded-2xl bg-white/5 font-bold text-white border border-white/10 active:bg-white/10"
+                 >
+                   Zpět k úpravám
+                 </button>
+                 <button 
+                   onClick={() => { onClose(); onClearSelection(); }} 
+                   className="py-4 rounded-2xl bg-danger/10 font-bold text-danger border border-danger/20 shadow-glow active:bg-danger/20"
+                 >
+                   Zahodit a zavřít
+                 </button>
+              </div>
+           </div>
+        ) : mode === 'DEFAULT' ? (
           <>
-            {/* List of tables to edit sizes */}
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1 -mr-1 min-h-[100px]">
+            {/* 1. SCROLLABLE LIST OF TABLES */}
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 -mr-1 min-h-[100px] mask-gradient-bottom">
               {selectedList.map(t => (
                 <div key={t.id} ref={(el) => { rowRefs.current[t.id] = el; }}>
                     <SizeRow 
@@ -202,8 +261,24 @@ export const FieldOverlay: React.FC<FieldOverlayProps> = ({
               ))}
             </div>
 
-            {/* Context Actions (Time & Worker) */}
-            <div className="flex gap-3 flex-shrink-0 mt-3">
+            {/* 2. LIVE METRICS (New Core Loop Feature) */}
+            <div className="glass-base rounded-2xl p-4 flex justify-between items-center border border-white/10 bg-black/20 flex-shrink-0">
+               <div className="flex flex-col items-center flex-1 border-r border-white/5">
+                  <span className="text-2xl font-black text-white tabular-nums tracking-tight">{liveStats.tableCount}</span>
+                  <span className="text-[9px] font-bold text-white/30 uppercase tracking-wider">Stolů</span>
+               </div>
+               <div className="flex flex-col items-center flex-1 border-r border-white/5">
+                  <span className="text-2xl font-black text-solar-start tabular-nums tracking-tight">{liveStats.totalStrings}</span>
+                  <span className="text-[9px] font-bold text-solar-start/60 uppercase tracking-wider">Stringů</span>
+               </div>
+               <div className="flex flex-col items-center flex-1">
+                  <span className="text-2xl font-black text-amber-400 tabular-nums tracking-tight">{Math.round(liveStats.totalKwp)}</span>
+                  <span className="text-[9px] font-bold text-amber-400/60 uppercase tracking-wider">kWp</span>
+               </div>
+            </div>
+
+            {/* 3. CONTEXT ACTIONS (Who & When) */}
+            <div className="flex gap-3 flex-shrink-0">
               <button 
                 onClick={toggleWorker}
                 className="flex-1 glass-base rounded-2xl p-3 flex flex-col items-start active:bg-white/10 transition-colors relative overflow-hidden border-white/10 hover:border-white/20"
@@ -226,27 +301,28 @@ export const FieldOverlay: React.FC<FieldOverlayProps> = ({
               </button>
             </div>
 
-            {/* Main Action */}
+            {/* 4. MAIN ACTION (Save) */}
             <button 
               onClick={() => executeSave(TableStatus.DONE)}
-              className="w-full h-16 rounded-2xl font-black text-xl shadow-glow transition-all flex items-center justify-center gap-3 relative overflow-hidden group bg-solar-gradient text-white active:scale-[0.98] flex-shrink-0 mt-2"
+              className="w-full h-16 rounded-2xl font-black text-xl shadow-glow transition-all flex items-center justify-center gap-3 relative overflow-hidden group bg-solar-gradient text-white active:scale-[0.98] flex-shrink-0"
             >
               <div className="absolute inset-0 bg-white/20 group-hover:bg-white/10 transition-colors" />
               <span className="tracking-wide text-shadow-sm">DOKONČIT</span>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 text-white/80"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" /></svg>
             </button>
 
-            {/* Secondary Actions Trigger */}
-            <div className="flex justify-center pt-2 pb-2 flex-shrink-0">
+            {/* 5. SECONDARY TRIGGER */}
+            <div className="flex justify-center pt-1 pb-2 flex-shrink-0">
                <button 
                  onClick={() => setMode('ACTIONS')}
                  className="text-[10px] font-bold text-white/30 uppercase tracking-widest py-2 px-4 rounded-lg active:bg-white/5 hover:text-white/50 transition-colors"
                >
-                 Další možnosti
+                 Nahlásit problém / Rozděláno
                </button>
             </div>
           </>
         ) : mode === 'TIME' ? (
+          // --- TIME PICKER MODE ---
           <div className="animate-fade-in space-y-4 flex-1">
              <div className="flex items-center justify-between">
                 <h4 className="font-bold text-white text-lg tracking-tight">Upravit čas</h4>
@@ -260,6 +336,7 @@ export const FieldOverlay: React.FC<FieldOverlayProps> = ({
              />
           </div>
         ) : mode === 'ISSUE_DETAIL' ? (
+          // --- ISSUE REPORTING MODE ---
           <div className="animate-fade-in space-y-4 flex-1 flex flex-col">
              <div className="flex items-center justify-between">
                 <h4 className="font-bold text-white text-lg tracking-tight">Nahlásit problém</h4>
@@ -298,6 +375,7 @@ export const FieldOverlay: React.FC<FieldOverlayProps> = ({
              </button>
           </div>
         ) : (
+          // --- SECONDARY ACTIONS MODE ---
           <div className="animate-fade-in space-y-4 flex-1">
              <div className="flex items-center justify-between">
                 <h4 className="font-bold text-white text-lg tracking-tight">Další možnosti</h4>

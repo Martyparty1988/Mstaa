@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Project, ProjectMode, PerformanceSnapshot, TableStatus } from '../../domain';
+import React, { useState, useMemo } from 'react';
+import { Project, ProjectMode, PerformanceSnapshot, TableStatus, WorkLog, Worker, calculateEarnings } from '../../domain';
 import { Layout } from '../../ui/Layout';
 import { Button } from '../../ui/Button';
 
@@ -10,9 +10,13 @@ interface DashboardProps {
   onCreateNew: () => void;
   onLogHourly: (activity: string, duration: number, start: string, end: string) => void;
   onOpenSettings: () => void;
-  onOpenTeam: () => void; // New prop
+  onOpenTeam: () => void;
+  onOpenWallet: () => void; // New Prop
   snapshot: PerformanceSnapshot;
   viewMode?: 'OVERVIEW' | 'PROJECTS_LIST';
+  // Props for Wallet Preview
+  currentUser?: Worker;
+  workLogs?: WorkLog[]; 
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ 
@@ -23,10 +27,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onLogHourly, 
   onOpenSettings,
   onOpenTeam,
+  onOpenWallet,
   snapshot,
-  viewMode = 'OVERVIEW'
+  viewMode = 'OVERVIEW',
+  currentUser,
+  workLogs = []
 }) => {
   
+  // Calculate Today's Earnings for the Mini-Card
+  const todayEarnings = useMemo(() => {
+     if (!currentUser) return 0;
+     const now = new Date();
+     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+     const todayLogs = workLogs.filter(l => l.workerId === currentUser.id && l.timestamp >= startOfToday);
+     return calculateEarnings(todayLogs, currentUser, projects).total;
+  }, [currentUser, workLogs, projects]);
+
   // Settings Icon Component
   const SettingsButton = (
     <button 
@@ -148,8 +164,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
             )}
           </div>
 
-          {/* 3. QUICK ACTIONS */}
+          {/* 3. QUICK ACTIONS GRID */}
           <div className="px-4 grid grid-cols-2 gap-3">
+             {/* Log Hourly */}
              <button 
                 onClick={() => {
                    const now = new Date();
@@ -167,15 +184,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </div>
              </button>
              
-             {/* Team Management Shortcut */}
+             {/* Wallet / Earnings (Primary Feature) */}
+             <button 
+                onClick={onOpenWallet}
+                className="glass-base p-4 rounded-2xl flex items-center gap-3 active:scale-95 transition-all hover:bg-emerald-500/10 border-white/10 relative overflow-hidden"
+             >
+                <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 shadow-glow">💰</div>
+                <div className="text-left relative z-10">
+                   <div className="text-sm font-bold text-white">Moje Výplata</div>
+                   <div className="text-[10px] text-emerald-300 font-bold uppercase tracking-wider">Dnes: {todayEarnings.toFixed(0)} €</div>
+                </div>
+             </button>
+
+             {/* Team Management */}
              <button 
                 onClick={onOpenTeam}
-                className="glass-base p-4 rounded-2xl flex items-center gap-3 active:scale-95 transition-all hover:bg-white/5 border-white/10"
+                className="glass-base p-4 rounded-2xl flex items-center gap-3 active:scale-95 transition-all hover:bg-white/5 border-white/10 col-span-2"
              >
                 <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center border border-blue-500/20">👷</div>
                 <div className="text-left">
                    <div className="text-sm font-bold text-white">Správa týmu</div>
-                   <div className="text-[9px] text-white/40 font-bold uppercase tracking-wider">Karty & Platy</div>
+                   <div className="text-[9px] text-white/40 font-bold uppercase tracking-wider">Karty zaměstnanců a nastavení rolí</div>
                 </div>
              </button>
           </div>
@@ -186,6 +215,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   }
 
   // --- RENDER: PROJECTS LIST (SEPARATE VIEW) ---
+  // (Keep existing code for Projects List view...)
   return (
     <Layout title="Projekty" action={SettingsButton}>
       <div className="flex flex-col h-full pt-4 pb-24 px-2 space-y-4">

@@ -17,7 +17,7 @@ interface FieldMapProps {
     note?: string; 
     status?: TableStatus 
   }) => void;
-  onNavigate: (tab: 'TEAM' | 'STATS' | 'CHAT' | 'MENU') => void;
+  onNavigate: (tab: 'TEAM' | 'STATS' | 'CHAT' | 'RECORDS' | 'MENU') => void;
 }
 
 // --- TABLE CELL (Animated Visual States) ---
@@ -106,7 +106,12 @@ const TableCell: React.FC<TableCellProps> = ({ table, isSelected, completionLog,
     if (isSelected) return null;
     if (isDone) return <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.8)]" />;
     if (isInProgress) return <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(34,211,238,0.8)] animate-pulse" />;
-    if (isIssue) return <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full shadow-[0_0_8px_rgba(248,113,113,0.8)]" />;
+    // Issue Flag Icon instead of just a dot
+    if (isIssue) return (
+       <div className="absolute top-1 right-1 text-red-500 opacity-90 animate-pulse-slow">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625l6.28-10.875zM10 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" /></svg>
+       </div>
+    );
     return null;
   };
 
@@ -411,6 +416,7 @@ export const FieldMap: React.FC<FieldMapProps> = ({ project, logs, workers, onBa
         isOpen={isEditing}
         selectedIds={selectedIds}
         projectTables={tables}
+        settings={project.settings}
         onClose={() => setIsEditing(false)}
         onClearSelection={clear}
         onSave={onSave}
@@ -436,10 +442,20 @@ export const FieldMap: React.FC<FieldMapProps> = ({ project, logs, workers, onBa
                    <span className="text-white font-bold tracking-wide">Statistiky</span>
                 </button>
               </div>
-              <button onClick={() => onNavigate('CHAT')} className="w-full glass-base p-5 rounded-[24px] flex items-center justify-between px-8 active:scale-[0.98] transition-all border-white/10 hover:bg-white/5 group">
-                 <span className="text-white font-bold tracking-wide">Deník & Chat</span>
-                 <div className="w-10 h-10 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-lg shadow-glow group-hover:scale-110 transition-transform">💬</div>
-              </button>
+              
+              {/* Split Chat & Logs for Better Separation */}
+              <div className="grid grid-cols-2 gap-4">
+                 <button onClick={() => onNavigate('RECORDS')} className="glass-base p-5 rounded-[24px] flex flex-col items-center gap-3 active:scale-[0.98] transition-all border-white/10 hover:bg-white/5 group">
+                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg shadow-glow group-hover:scale-110 transition-transform">📝</div>
+                    <span className="text-white font-bold tracking-wide text-sm">Deník prací</span>
+                 </button>
+                 
+                 <button onClick={() => onNavigate('CHAT')} className="glass-base p-5 rounded-[24px] flex flex-col items-center gap-3 active:scale-[0.98] transition-all border-white/10 hover:bg-white/5 group">
+                    <div className="w-10 h-10 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-lg shadow-glow group-hover:scale-110 transition-transform">💬</div>
+                    <span className="text-white font-bold tracking-wide text-sm">Chat</span>
+                 </button>
+              </div>
+
               <div className="pt-4">
                  <button onClick={() => setIsMenuOpen(false)} className="w-full py-4 text-white/40 font-bold text-sm tracking-widest uppercase rounded-2xl border border-white/5 active:bg-white/5 hover:text-white transition-colors">Zavřít</button>
               </div>

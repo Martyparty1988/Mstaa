@@ -15,7 +15,7 @@ export const getDmChannelId = (id1: string, id2: string) => {
 
 export const ChannelList: React.FC<ChannelListProps> = ({ projects, allWorkers, currentUser, onSelect, onClose }) => {
   return (
-    <div className="flex flex-col h-full pt-[calc(1rem+env(safe-area-inset-top))] px-4 pb-20 overflow-y-auto">
+    <div className="flex flex-col h-full pt-[calc(1rem+env(safe-area-inset-top))] px-4 pb-32 overflow-y-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-black text-white tracking-tight">Zprávy</h1>
         <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-white/60 active:bg-white/10">

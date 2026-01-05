@@ -115,15 +115,15 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ workers, onUpdateWorke
                            {roleConfig?.label}
                          </span>
                          
-                         {/* Rates Badges */}
+                         {/* Rates Badges in EUR */}
                          {(worker.rateHourly || 0) > 0 && (
                             <span className="text-[10px] text-white/60 font-mono font-bold flex items-center gap-1 bg-black/20 px-1.5 py-0.5 rounded">
-                              <span className="text-white/30">H:</span> {worker.rateHourly}
+                              <span className="text-white/30">H:</span> {worker.rateHourly} €
                             </span>
                          )}
                          {(worker.rateString || 0) > 0 && (
                             <span className="text-[10px] text-solar-start/80 font-mono font-bold flex items-center gap-1 bg-black/20 px-1.5 py-0.5 rounded">
-                              <span className="text-white/30">S:</span> {worker.rateString}
+                              <span className="text-white/30">S:</span> {worker.rateString} €
                             </span>
                          )}
                        </div>
@@ -158,100 +158,111 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ workers, onUpdateWorke
         </svg>
       </button>
 
-      {/* EDIT/ADD MODAL */}
+      {/* EDIT MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-midnight/90 backdrop-blur-xl animate-fade-in" onClick={() => setIsModalOpen(false)}>
-          <div className="glass-base w-full rounded-t-[32px] p-8 pb-[calc(2rem+env(safe-area-inset-bottom))] border-t border-white/20 space-y-6 bg-midnight/95 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            
-            {/* Header */}
-            <div>
-              <h3 className="text-3xl font-black text-white tracking-tight mb-1">
-                {editingWorker.id ? 'Upravit kartu' : 'Nový pracovník'}
-              </h3>
-              <p className="text-white/40 text-sm font-medium">Osobní údaje a nastavení odměn</p>
-            </div>
-            
-            {/* Name Input */}
-            <div className="space-y-2">
-               <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 pl-2">Jméno a Příjmení</label>
-               <input 
-                 type="text" 
-                 placeholder="Např. Jan Novák" 
-                 className="w-full bg-black/30 p-4 rounded-2xl text-white border border-white/10 focus:border-solar-start focus:outline-none text-xl font-bold placeholder-white/20"
-                 value={editingWorker.name || ''}
-                 onChange={e => setEditingWorker({...editingWorker, name: e.target.value})}
-                 autoFocus={!editingWorker.id}
-               />
-            </div>
-
-            {/* Role Selection */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 pl-2">Pozice v týmu</label>
-              <div className="grid grid-cols-2 gap-3">
-                {ROLES.map(role => (
-                  <button 
-                    key={role.id}
-                    onClick={() => setEditingWorker({...editingWorker, role: role.id})}
-                    className={`p-4 rounded-2xl border text-sm font-bold flex items-center justify-center gap-2 transition-all uppercase tracking-wide ${editingWorker.role === role.id ? 'bg-solar-gradient text-white border-transparent shadow-glow' : 'bg-white/5 text-white/50 border-white/5 active:bg-white/10'}`}
-                  >
-                    {role.label}
-                  </button>
-                ))}
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-midnight/80 backdrop-blur-xl animate-fade-in" onClick={() => setIsModalOpen(false)}>
+           <div className="glass-base w-full rounded-t-[32px] p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] border-t border-white/20 bg-midnight/95 shadow-2xl" onClick={e => e.stopPropagation()}>
+              
+              <div className="flex justify-between items-start mb-6">
+                 <div>
+                    <h3 className="text-2xl font-black text-white tracking-tight leading-none mb-1">
+                      {editingWorker.id ? 'Upravit pracovníka' : 'Nový pracovník'}
+                    </h3>
+                    <p className="text-white/40 text-sm font-medium">Osobní údaje a nastavení odměn</p>
+                 </div>
+                 <button onClick={() => setIsModalOpen(false)} className="p-2 -mr-2 text-white/40 hover:text-white">Zavřít</button>
               </div>
-            </div>
 
-            {/* Pay Rates */}
-            <div className="space-y-3 pt-2">
-               <div className="flex items-center gap-2 mb-1">
-                 <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 pl-2">Sazby odměn</label>
-                 <div className="h-[1px] flex-1 bg-white/5"></div>
-               </div>
+              <div className="space-y-6">
+                 {/* Name Input */}
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 pl-1">Jméno a Příjmení</label>
+                    <input 
+                      autoFocus
+                      type="text" 
+                      value={editingWorker.name || ''} 
+                      onChange={e => setEditingWorker({...editingWorker, name: e.target.value})}
+                      placeholder="Např. Jan Novák"
+                      className="w-full h-14 bg-black/20 rounded-2xl px-4 text-lg font-bold text-white placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-solar-start border border-white/5"
+                    />
+                 </div>
 
-               <div className="grid grid-cols-2 gap-4">
-                  {/* Hourly */}
-                  <div className="glass-base p-4 rounded-2xl border border-white/10 bg-black/20">
-                     <div className="flex justify-between mb-2">
-                        <span className="text-[10px] font-bold text-white/40 uppercase">Hodinová</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-white/20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" /></svg>
-                     </div>
-                     <div className="flex items-baseline gap-2">
-                        <input 
-                           type="number" 
-                           placeholder="0"
-                           className="w-full bg-transparent text-2xl font-black text-white focus:outline-none placeholder-white/10"
-                           value={editingWorker.rateHourly || ''}
-                           onChange={e => setEditingWorker({...editingWorker, rateHourly: parseFloat(e.target.value)})}
-                        />
-                        <span className="text-xs font-bold text-white/40">Kč/h</span>
-                     </div>
-                  </div>
+                 {/* Role Selector */}
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 pl-1">Pozice v týmu</label>
+                    <div className="grid grid-cols-2 gap-3">
+                       {ROLES.map(r => (
+                         <button 
+                           key={r.id}
+                           onClick={() => setEditingWorker({...editingWorker, role: r.id})}
+                           className={`h-12 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${editingWorker.role === r.id ? 'bg-solar-gradient text-white border-transparent shadow-glow' : 'bg-white/5 text-white/40 border-white/5'}`}
+                         >
+                           {r.label}
+                         </button>
+                       ))}
+                    </div>
+                 </div>
 
-                  {/* Task/String */}
-                  <div className="glass-base p-4 rounded-2xl border border-white/10 bg-black/20">
-                     <div className="flex justify-between mb-2">
-                        <span className="text-[10px] font-bold text-solar-start/60 uppercase">Úkolová (String)</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-solar-start/40"><path d="M11.983 1.907a.75.75 0 00-1.292-.657l-8.5 9.5A.75.75 0 002.75 12h6.572l-1.283 6.093a.75.75 0 001.292.657l8.5-9.5A.75.75 0 0017.25 8h-6.572l1.305-6.093z" /></svg>
-                     </div>
-                     <div className="flex items-baseline gap-2">
-                        <input 
-                           type="number" 
-                           placeholder="0"
-                           className="w-full bg-transparent text-2xl font-black text-solar-start focus:outline-none placeholder-white/10"
-                           value={editingWorker.rateString || ''}
-                           onChange={e => setEditingWorker({...editingWorker, rateString: parseFloat(e.target.value)})}
-                        />
-                        <span className="text-xs font-bold text-solar-start/60">Kč/str</span>
-                     </div>
-                  </div>
-               </div>
-            </div>
+                 {/* Rates Configuration (EUR) */}
+                 <div className="space-y-2 pt-2 border-t border-white/5">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 pl-1">Sazby odměn</label>
+                    <div className="grid grid-cols-2 gap-4">
+                       
+                       {/* Hourly Rate */}
+                       <div className={`p-3 rounded-2xl border transition-all ${editingWorker.rateHourly ? 'bg-white/10 border-white/20' : 'bg-black/20 border-white/5'}`}>
+                          <div className="flex justify-between items-center mb-1">
+                             <span className="text-[10px] font-bold uppercase text-white/40">Hodinová</span>
+                             <span className="text-white/20">🕒</span>
+                          </div>
+                          <div className="flex items-baseline gap-1">
+                             <input 
+                               type="number" 
+                               value={editingWorker.rateHourly || ''} 
+                               onChange={e => setEditingWorker({...editingWorker, rateHourly: parseFloat(e.target.value)})}
+                               placeholder="0"
+                               className="w-full bg-transparent font-black text-2xl text-white placeholder-white/10 focus:outline-none"
+                             />
+                             <span className="text-xs font-bold text-white/40">€/h</span>
+                          </div>
+                       </div>
 
-            <Button onClick={handleSave} disabled={!editingWorker.name} fullWidth size="lg">
-              {editingWorker.id ? 'Uložit změny' : 'Vytvořit pracovníka'}
-            </Button>
-          </div>
+                       {/* String Rate */}
+                       <div className={`p-3 rounded-2xl border transition-all ${editingWorker.rateString ? 'bg-solar-start/10 border-solar-start/30' : 'bg-black/20 border-white/5'}`}>
+                          <div className="flex justify-between items-center mb-1">
+                             <span className={`text-[10px] font-bold uppercase ${editingWorker.rateString ? 'text-solar-start' : 'text-white/40'}`}>Úkolová (String)</span>
+                             <span className={editingWorker.rateString ? 'text-solar-start' : 'text-white/20'}>⚡</span>
+                          </div>
+                          <div className="flex items-baseline gap-1">
+                             <input 
+                               type="number" 
+                               value={editingWorker.rateString || ''} 
+                               onChange={e => setEditingWorker({...editingWorker, rateString: parseFloat(e.target.value)})}
+                               placeholder="0"
+                               className={`w-full bg-transparent font-black text-2xl placeholder-white/10 focus:outline-none ${editingWorker.rateString ? 'text-solar-start' : 'text-white'}`}
+                             />
+                             <span className={`text-xs font-bold ${editingWorker.rateString ? 'text-solar-start/60' : 'text-white/40'}`}>€/str</span>
+                          </div>
+                       </div>
+
+                    </div>
+                 </div>
+
+                 <div className="pt-4">
+                    <Button 
+                      onClick={handleSave} 
+                      fullWidth 
+                      size="lg"
+                      disabled={!editingWorker.name}
+                      className={editingWorker.name ? 'shadow-glow' : 'opacity-50 grayscale'}
+                    >
+                       {editingWorker.id ? 'Uložit změny' : 'Vytvořit pracovníka'}
+                    </Button>
+                 </div>
+              </div>
+           </div>
         </div>
       )}
+
     </Layout>
   );
 };

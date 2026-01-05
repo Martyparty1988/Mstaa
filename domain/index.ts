@@ -1,3 +1,5 @@
+
+
 // --- TYPES ---
 export * from './types';
 
@@ -14,7 +16,9 @@ export {
   parseTableId, 
   groupTablesBySection, 
   parseRawTableInput,
-  sortTablesByOrder
+  sortTablesByOrder,
+  generateTableRange,
+  parseCSVImport
 } from './tables';
 
 // --- PERFORMANCE & METRICS ---
@@ -23,3 +27,9 @@ export {
   createPerformanceSnapshot,
   forecastCompletion 
 } from './performance';
+
+// --- ECONOMICS ---
+export {
+  calculateLogEarnings,
+  calculateEarnings
+} from './economics';
