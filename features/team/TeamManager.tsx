@@ -42,28 +42,28 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ workers, onUpdateWorke
 
   return (
     <Layout title="Správa Týmu" showBack onBack={onBack}>
-      <div className="space-y-4 pt-4">
+      <div className="space-y-6 pt-4">
         
         {/* Active Workers */}
         <div className="flex justify-between items-center px-1">
-          <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest">Aktivní tým</h3>
-          <span className="text-xs font-bold text-white/30 bg-white/5 px-2 py-0.5 rounded">{workers.filter(w => w.isActive).length} lidí</span>
+          <h3 className="text-xs font-bold text-white/50 uppercase tracking-[0.15em]">Aktivní tým</h3>
+          <span className="text-[10px] font-bold text-white/30 bg-white/5 px-2 py-1 rounded border border-white/5">{workers.filter(w => w.isActive).length} lidí</span>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           {workers.filter(w => w.isActive).map(worker => (
-            <div key={worker.id} className="glass-card p-4 rounded-2xl flex items-center justify-between group active:scale-[0.99] transition-transform">
-              <div className="flex items-center gap-3">
-                 <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-slate-900 shadow-lg text-lg" style={{ backgroundColor: worker.avatarColor || '#ccc' }}>
+            <div key={worker.id} className="glass-base p-4 rounded-[24px] flex items-center justify-between group active:scale-[0.99] transition-transform border-white/10 hover:border-white/20">
+              <div className="flex items-center gap-4">
+                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-slate-900 shadow-lg text-xl" style={{ backgroundColor: worker.avatarColor || '#ccc' }}>
                    {worker.name.charAt(0)}
                  </div>
                  <div>
-                   <div className="font-bold text-white text-lg leading-tight">{worker.name}</div>
-                   <div className="flex items-center gap-2 mt-1">
-                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${ROLES.find(r => r.id === worker.role)?.bg} ${ROLES.find(r => r.id === worker.role)?.color}`}>
+                   <div className="font-black text-white text-xl leading-tight tracking-tight text-shadow-sm">{worker.name}</div>
+                   <div className="flex items-center gap-2 mt-1.5">
+                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${ROLES.find(r => r.id === worker.role)?.bg} ${ROLES.find(r => r.id === worker.role)?.color}`}>
                        {ROLES.find(r => r.id === worker.role)?.label}
                      </span>
-                     {worker.rateHourly && <span className="text-[10px] text-white/40 font-mono">{worker.rateHourly} €/h</span>}
+                     {worker.rateHourly && <span className="text-[10px] text-white/40 font-mono font-bold">{worker.rateHourly} €/h</span>}
                    </div>
                  </div>
               </div>
@@ -77,19 +77,19 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ workers, onUpdateWorke
         </div>
 
         {/* Inactive Workers */}
-        <div className="flex justify-between items-center px-1 mt-8">
-          <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest">Neaktivní / Historie</h3>
+        <div className="flex justify-between items-center px-1 mt-10">
+          <h3 className="text-xs font-bold text-white/30 uppercase tracking-[0.15em]">Neaktivní / Historie</h3>
         </div>
-        <div className="space-y-2 opacity-50 grayscale hover:grayscale-0 transition-all">
+        <div className="space-y-2 opacity-60 grayscale hover:grayscale-0 transition-all duration-300">
           {workers.filter(w => !w.isActive).map(worker => (
-            <div key={worker.id} className="bg-white/5 border border-white/5 p-3 rounded-2xl flex items-center justify-between">
+            <div key={worker.id} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex items-center justify-between">
               <div className="flex items-center gap-3">
                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-white/20">
                    {worker.name.charAt(0)}
                  </div>
                  <div className="text-white/50 font-bold">{worker.name}</div>
               </div>
-              <button onClick={() => handleToggleActive(worker)} className="text-xs font-bold px-3 py-1 bg-white/10 rounded-lg text-white/60">Aktivovat</button>
+              <button onClick={() => handleToggleActive(worker)} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 bg-white/10 rounded-lg text-white/60 hover:bg-white/20 transition-colors">Aktivovat</button>
             </div>
           ))}
         </div>
@@ -99,7 +99,7 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ workers, onUpdateWorke
 
       <button 
         onClick={() => setShowAdd(true)}
-        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 w-14 h-14 bg-solar-gradient text-white rounded-full shadow-glow flex items-center justify-center z-40 active:scale-90 transition-transform"
+        className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-4 w-14 h-14 bg-solar-gradient text-white rounded-full shadow-glow flex items-center justify-center z-40 active:scale-90 transition-transform border border-white/20"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
           <path fillRule="evenodd" d="M12 3.75a.75.75 0 01.75.75v6.75h6.75a.75.75 0 010 1.5h-6.75v6.75a.75.75 0 01-1.5 0v-6.75H4.5a.75.75 0 010-1.5h6.75V4.5a.75.75 0 01.75-.75z" clipRule="evenodd" />
@@ -107,14 +107,14 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ workers, onUpdateWorke
       </button>
 
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm animate-fade-in" onClick={() => setShowAdd(false)}>
-          <div className="bg-surface w-full rounded-t-3xl p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] border-t border-white/10 space-y-6" onClick={e => e.stopPropagation()}>
-            <h3 className="text-2xl font-bold text-white">Nový pracovník</h3>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-midnight/90 backdrop-blur-xl animate-fade-in" onClick={() => setShowAdd(false)}>
+          <div className="glass-base w-full rounded-t-[32px] p-8 pb-[calc(2rem+env(safe-area-inset-bottom))] border-t border-white/20 space-y-8 bg-midnight/90" onClick={e => e.stopPropagation()}>
+            <h3 className="text-3xl font-black text-white tracking-tight">Nový pracovník</h3>
             
             <input 
               type="text" 
               placeholder="Jméno a příjmení" 
-              className="w-full bg-black/20 p-4 rounded-2xl text-white border border-white/10 focus:border-solar-start focus:outline-none text-lg"
+              className="w-full bg-black/30 p-5 rounded-2xl text-white border border-white/10 focus:border-solar-start focus:outline-none text-xl font-bold placeholder-white/20"
               value={newWorker.name || ''}
               onChange={e => setNewWorker({...newWorker, name: e.target.value})}
               autoFocus
@@ -125,24 +125,24 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ workers, onUpdateWorke
                 <button 
                   key={role.id}
                   onClick={() => setNewWorker({...newWorker, role: role.id})}
-                  className={`p-4 rounded-2xl border text-sm font-bold flex items-center justify-center gap-2 transition-all ${newWorker.role === role.id ? 'bg-solar-gradient text-white border-transparent shadow-glow' : 'bg-white/5 text-white/50 border-white/5'}`}
+                  className={`p-4 rounded-2xl border text-sm font-bold flex items-center justify-center gap-2 transition-all uppercase tracking-wide ${newWorker.role === role.id ? 'bg-solar-gradient text-white border-transparent shadow-glow' : 'bg-white/5 text-white/50 border-white/5'}`}
                 >
                   {role.label}
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center gap-3 bg-black/20 p-4 rounded-2xl border border-white/10">
-               <span className="text-white/50 text-sm pl-2 font-bold uppercase">Sazba</span>
+            <div className="flex items-center gap-4 bg-black/30 p-5 rounded-2xl border border-white/10">
+               <span className="text-white/50 text-xs font-bold uppercase tracking-widest pl-2">Sazba</span>
                <div className="flex-1" />
                <input 
                   type="number" 
                   placeholder="0" 
-                  className="bg-transparent text-white font-mono font-bold w-20 text-right focus:outline-none text-xl"
+                  className="bg-transparent text-white font-mono font-bold w-24 text-right focus:outline-none text-2xl"
                   value={newWorker.rateHourly || ''}
                   onChange={e => setNewWorker({...newWorker, rateHourly: parseFloat(e.target.value)})}
                />
-               <span className="text-solar-start font-bold">€ / hod</span>
+               <span className="text-solar-start font-bold text-sm">€ / hod</span>
             </div>
 
             <Button onClick={saveNewWorker} disabled={!newWorker.name} fullWidth size="lg">Uložit pracovníka</Button>

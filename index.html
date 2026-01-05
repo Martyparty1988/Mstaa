@@ -14,32 +14,40 @@
         theme: {
           extend: {
             colors: {
-              // New Premium Palette
-              midnight: "#020617", // Deeper than slate-900
-              surface: "#0f172a",  // Slate 900 for cards
-              surfaceHighlight: "#1e293b", // Slate 800 for hovers
+              // New 'Deep Ocean' Palette
+              midnight: "#020617", // Slate 950 - Richer, darker black/blue
+              surface: "#1e293b",  // Slate 800
+              surfaceHighlight: "#334155", // Slate 700
               
-              // Solar Gradient Colors
+              // New Primary: Electric Cyan to Royal Blue
               solar: {
-                start: "#fbbf24", // Amber 400
-                end: "#f97316",   // Orange 500
-                glow: "rgba(245, 158, 11, 0.4)"
+                start: "#22d3ee", // Cyan-400 (Vibrant)
+                end: "#3b82f6",   // Blue-500 (Solid)
+                glow: "rgba(34, 211, 238, 0.5)" // Cyan Glow
               },
               
               // Accents
-              electric: "#3b82f6", // Blue
-              success: "#10b981",  // Emerald
-              danger: "#ef4444",   // Red
+              electric: "#38bdf8", // Sky Blue
+              gold: "#fbbf24",     // Amber-400 (For Solar/Energy metrics)
+              success: "#34d399",  // Emerald-400
+              danger: "#f87171",   // Red-400
             },
             backgroundImage: {
-              'solar-gradient': 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
-              'glass-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
-              'dark-radial': 'radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 70%)',
+              // Fresh, high-energy gradient
+              'solar-gradient': 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)', 
+              'active-gradient': 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)', // Amber/Orange
+              'glass-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+              // Cleaner hero glass
+              'hero-glass': 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%)',
             },
             boxShadow: {
-              'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
-              'glow': '0 0 20px rgba(249, 115, 22, 0.3)',
-              'glow-sm': '0 0 10px rgba(249, 115, 22, 0.2)',
+              'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.45)',
+              'glass-hero': '0 12px 48px 0 rgba(6, 182, 212, 0.25)',
+              'glow': '0 0 25px rgba(34, 211, 238, 0.4)',
+              'inner-light': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.15)',
+            },
+            fontFamily: {
+              sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
             },
             animation: {
               'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -57,10 +65,10 @@
     </script>
     <style>
       body {
-        background-color: #020617;
-        background-image: radial-gradient(circle at 50% -20%, #1e293b 0%, #020617 60%);
+        /* Deep Slate Gradient - Professional & Clean */
+        background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%);
         background-attachment: fixed;
-        color: white;
+        color: rgba(255, 255, 255, 0.95);
         -webkit-tap-highlight-color: transparent;
         font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       }
@@ -70,24 +78,29 @@
         background: transparent;
       }
       
-      /* Premium Glass Classes */
-      .glass {
-        background: rgba(30, 41, 59, 0.4);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+      /* Glassmorphism Classes */
+      .glass-base {
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        background: rgba(30, 41, 59, 0.4); /* Slate tint */
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
       }
       
-      .glass-card {
-        background: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      .glass-hero {
+        backdrop-filter: blur(30px) saturate(200%);
+        -webkit-backdrop-filter: blur(30px) saturate(200%);
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 12px 48px 0 rgba(6, 182, 212, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
       }
 
-      .text-shadow {
-        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      .text-glow {
+        text-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
+      }
+      
+      .text-shadow-hero {
+        text-shadow: 0 4px 20px rgba(6, 182, 212, 0.5);
       }
     </style>
   <script type="importmap">

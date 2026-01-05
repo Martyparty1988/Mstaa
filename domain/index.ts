@@ -14,7 +14,7 @@ export {
   parseTableId, 
   groupTablesBySection, 
   parseRawTableInput,
-  sortTablesById
+  sortTablesByOrder
 } from './tables';
 
 // --- PERFORMANCE & METRICS ---

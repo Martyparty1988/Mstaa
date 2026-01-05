@@ -55,6 +55,8 @@ export interface ProjectSettings {
 
 export interface Table {
   id: string;
+  label: string;      // Visual representation (exactly as entered)
+  orderIndex: number; // Strict sorting order
   size?: TableSize; 
   status: TableStatus;
 }
