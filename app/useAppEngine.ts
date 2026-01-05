@@ -17,12 +17,26 @@ export const useAppEngine = () => {
     if (savedP.length > 0) setProjects(savedP);
     else {
       setProjects([
-        { id: '1', name: 'FVE Demo Park A', mode: ProjectMode.A_FLEXIBLE, createdAt: Date.now(), completedTables: 12 },
-        { id: '2', name: 'FVE Demo Park B', mode: ProjectMode.B_STRICT, createdAt: Date.now(), completedTables: 45 },
+        { id: '1', name: 'FVE Demo Park A', mode: ProjectMode.A_FLEXIBLE, createdAt: Date.now(), completedTables: 0, tables: [] },
       ]);
     }
 
-    setWorkLogs(storage.get<WorkLog[]>(KEYS.LOGS, []));
+    const savedLogs = storage.get<WorkLog[]>(KEYS.LOGS, []);
+    
+    // Inject Demo Chat if empty (for visualization purposes)
+    if (savedLogs.length === 0) {
+      const now = Date.now();
+      const hour = 3600000;
+      const demoLogs: WorkLog[] = [
+        { id: 'msg1', projectId: '1', workerId: 'Karel Novák', type: WorkType.HOURLY, timestamp: now - 4 * hour, durationMinutes: 0, synced: true, note: 'Zdravím tým, na sekci 2E chybí profily. Může to někdo dovézt?' },
+        { id: 'msg2', projectId: '1', workerId: 'Petr Svoboda', type: WorkType.HOURLY, timestamp: now - 3.8 * hour, durationMinutes: 0, synced: true, note: 'Jedu tam s ještěrkou, vezmu celou paletu.' },
+        { id: 'msg3', projectId: '1', workerId: 'CURRENT_USER', type: WorkType.HOURLY, timestamp: now - 3.5 * hour, durationMinutes: 0, synced: true, note: 'Super, díky Petře. Já zatím dodělám řadu 15.' },
+        { id: 'msg4', projectId: '1', workerId: 'Karel Novák', type: WorkType.HOURLY, timestamp: now - 1 * hour, durationMinutes: 0, synced: true, note: 'POZOR! Na konci řady 18 je díra v plotě, nechoďte tam.' },
+      ];
+      setWorkLogs(demoLogs);
+    } else {
+      setWorkLogs(savedLogs);
+    }
 
     const savedW = storage.get<Worker[]>(KEYS.WORKERS, []);
     if (savedW.length > 0) setWorkers(savedW);
@@ -46,8 +60,9 @@ export const useAppEngine = () => {
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const todaysLogs = workLogs.filter(l => l.timestamp >= startOfToday);
-    return createPerformanceSnapshot(todaysLogs);
-  }, [workLogs]);
+    
+    return createPerformanceSnapshot(todaysLogs, activeProject?.settings);
+  }, [workLogs, activeProject]);
 
   // --- Actions ---
 
@@ -67,87 +82,137 @@ export const useAppEngine = () => {
     setView('PROJECT_VIEW');
   };
 
-  const selectProject = (project: Project, targetTab: 'MAP' | 'TEAM' | 'STATS' | 'CHAT' | 'MENU' = 'MAP') => {
+  const updateProject = (updated: Project) => {
+    setProjects(prev => prev.map(p => p.id === updated.id ? updated : p));
+    if (activeProject?.id === updated.id) {
+      setActiveProject(updated);
+    }
+  };
+
+  const selectProject = (project: Project, targetTab: 'MAP' | 'TEAM' | 'STATS' | 'CHAT' = 'MAP') => {
     setActiveProject(project);
     setProjectTab(targetTab);
     setView('PROJECT_VIEW');
   };
 
-  const saveWork = (data: { type: WorkType; tableId?: string; tableIds?: string[]; size?: TableSize; duration: number; startTime?: number; endTime?: number; note?: string; status?: TableStatus }, targetProjectId?: string) => {
-    const pId = targetProjectId || activeProject?.id;
-    if (!pId) return;
+  const saveWork = (data: { type: WorkType; tableId?: string; tableIds?: string[]; size?: TableSize; duration: number; startTime?: number; endTime?: number; note?: string; status?: TableStatus }) => {
+    if (!activeProject) return;
 
     const newLog: WorkLog = {
       id: Date.now().toString(),
-      projectId: pId,
-      workerId: storage.get(KEYS.LAST_WORKER, 'CURRENT_USER'),
+      projectId: activeProject.id,
+      workerId: storage.get<string>(KEYS.LAST_WORKER, 'CURRENT_USER') === 'TÝM' ? 'TEAM' : 'CURRENT_USER', // Simplified logic
       type: data.type,
+      timestamp: Date.now(),
+      synced: false,
+      durationMinutes: data.duration,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      note: data.note,
       tableId: data.tableId,
       tableIds: data.tableIds,
       size: data.size,
-      note: data.note,
-      timestamp: Date.now(),
-      startTime: data.startTime,
-      endTime: data.endTime,
-      durationMinutes: data.duration,
-      synced: false 
+      status: data.status,
     };
 
     setWorkLogs(prev => [newLog, ...prev]);
 
-    if (data.type === WorkType.TABLE) {
-      const idsToUpdate = new Set(data.tableIds || (data.tableId ? [data.tableId] : []));
-      const updatedProject = projects.find(p => p.id === pId);
-      if (updatedProject) {
-         const newP = { 
-            ...updatedProject, 
-            completedTables: updatedProject.completedTables + idsToUpdate.size,
-            tables: updatedProject.tables?.map(t => 
-               idsToUpdate.has(t.id) 
-               ? { ...t, status: data.status || TableStatus.DONE, size: data.size || t.size } 
-               : t
-            )
-         };
-         setProjects(prev => prev.map(p => p.id === newP.id ? newP : p));
-         if (activeProject?.id === newP.id) setActiveProject(newP);
-      }
-      if (navigator.vibrate) navigator.vibrate(50);
+    // If table update, update project state locally
+    if (data.type === WorkType.TABLE && (data.tableIds || data.tableId) && data.status) {
+      const idsToUpdate = new Set(data.tableIds || [data.tableId!]);
+      
+      const updatedTables = (activeProject.tables || []).map(t => {
+        if (idsToUpdate.has(t.id)) {
+           return { ...t, status: data.status!, size: data.size || t.size };
+        }
+        return t;
+      });
+
+      const completedCount = updatedTables.filter(t => t.status === TableStatus.DONE).length;
+
+      const updatedProject = {
+        ...activeProject,
+        tables: updatedTables,
+        completedTables: completedCount
+      };
+
+      updateProject(updatedProject);
     }
   };
 
-  const addNote = (text: string) => {
-    saveWork({
+  const logHourly = (activity: string, duration: number, start: string, end: string) => {
+    if (!activeProject) return;
+    const now = new Date();
+    // Simplified parsing for demo
+    const startTime = new Date(now.setHours(parseInt(start.split(':')[0]), parseInt(start.split(':')[1]))).getTime();
+    const endTime = new Date(now.setHours(parseInt(end.split(':')[0]), parseInt(end.split(':')[1]))).getTime();
+
+    const newLog: WorkLog = {
+      id: Date.now().toString(),
+      projectId: activeProject.id,
+      workerId: 'CURRENT_USER',
       type: WorkType.HOURLY,
-      duration: 0,
+      timestamp: Date.now(),
+      synced: false,
+      durationMinutes: duration,
+      startTime,
+      endTime,
+      note: activity
+    };
+    setWorkLogs(prev => [newLog, ...prev]);
+  };
+
+  const addNote = (text: string, channelId?: string, attachments?: string[]) => {
+    // channelId can be a projectId OR a "dm_id1_id2" string
+    const newLog: WorkLog = {
+      id: Date.now().toString(),
+      projectId: channelId || activeProject?.id || 'GLOBAL',
+      workerId: 'CURRENT_USER',
+      type: WorkType.HOURLY, // Using Hourly as generic type for notes currently
+      timestamp: Date.now(),
+      synced: false,
+      durationMinutes: 0,
       note: text,
-    });
+      attachments: attachments
+    };
+    setWorkLogs(prev => [newLog, ...prev]);
   };
 
-  const logHourly = (activity: string, duration: number, startStr: string, endStr: string) => {
-    if (projects.length > 0) {
-      const today = new Date();
-      const [sh, sm] = startStr.split(':').map(Number);
-      const [eh, em] = endStr.split(':').map(Number);
-      const startDate = new Date(today); startDate.setHours(sh, sm, 0, 0);
-      const endDate = new Date(today); endDate.setHours(eh, em, 0, 0);
-
-      saveWork({
-        type: WorkType.HOURLY,
-        duration: duration,
-        startTime: startDate.getTime(),
-        endTime: endDate.getTime(),
-        note: activity,
-        status: TableStatus.DONE
-      }, projects[0].id);
-    }
+  const updateWorker = (worker: Worker) => {
+    setWorkers(prev => prev.map(w => w.id === worker.id ? worker : w));
   };
 
-  const updateWorker = (updated: Worker) => {
-    setWorkers(prev => prev.map(w => w.id === updated.id ? updated : w));
+  const addWorker = (worker: Worker) => {
+    setWorkers(prev => [...prev, worker]);
   };
-  
-  const addWorker = (newW: Worker) => {
-    setWorkers(prev => [...prev, newW]);
+
+  const exportProjectData = (projectId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    const logs = workLogs.filter(l => l.projectId === projectId);
+    const headers = "Timestamp,Date,Time,Worker,Type,TableIDs,Size,Status,Duration(min),Note\n";
+    
+    const rows = logs.map(l => {
+      const date = new Date(l.timestamp).toLocaleDateString();
+      const time = new Date(l.timestamp).toLocaleTimeString();
+      const tables = l.tableIds ? l.tableIds.join(';') : (l.tableId || '');
+      // Clean note for CSV (remove commas/newlines)
+      const cleanNote = (l.note || '').replace(/[\n,]/g, ' ');
+      
+      return `${l.timestamp},${date},${time},${l.workerId},${l.type},"${tables}",${l.size || ''},${l.status || ''},${l.durationMinutes},"${cleanNote}"`;
+    }).join("\n");
+
+    const csvContent = headers + rows;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${project.name.replace(/\s+/g, '_')}_export.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return {
@@ -160,10 +225,12 @@ export const useAppEngine = () => {
       createProject,
       selectProject,
       saveWork,
-      addNote,
       logHourly,
+      addNote,
       updateWorker,
-      addWorker
+      addWorker,
+      updateProject,
+      exportProjectData
     }
   };
 };

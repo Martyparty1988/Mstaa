@@ -1,3 +1,4 @@
+
 // --- ENUMS ---
 
 export enum ProjectMode {
@@ -81,11 +82,13 @@ export interface WorkLog {
   tableIds?: string[]; // Preferred
   size?: TableSize; 
   note?: string;
+  attachments?: string[]; // Base64 strings or URLs for Chat
   timestamp: number;
   startTime?: number;
   endTime?: number;
   durationMinutes: number;
   synced: boolean;
+  status?: TableStatus;
 }
 
 // --- METRICS ---

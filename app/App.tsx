@@ -5,11 +5,13 @@ import { useAppEngine } from './useAppEngine';
 import { Dashboard } from '../features/dashboard/Dashboard';
 import { CreateProject } from '../features/project/CreateProject';
 import { FieldMap } from '../features/field/FieldMap';
-import { ProjectLog } from '../features/chat/ProjectLog';
+import { ChatScreen } from '../features/chat/ChatScreen';
 import { TeamManager } from '../features/team/TeamManager';
 import { Stats } from '../features/stats/Stats';
 import { Settings } from '../features/settings/Settings';
+import { ProjectSettings } from '../features/project/ProjectSettings';
 import { GlobalTabBar, GlobalTab } from '../ui/GlobalTabBar';
+import { WorkType } from '../domain';
 
 const App = () => {
   const {
@@ -31,6 +33,8 @@ const App = () => {
     setIsSettingsOpen(false);
   };
 
+  const currentUser = workers.find(w => w.id === 'CURRENT_USER') || workers[0];
+
   // --- 1. SETTINGS OVERLAY (Modal) ---
   if (isSettingsOpen) {
     return <Settings onBack={() => setIsSettingsOpen(false)} />;
@@ -51,7 +55,7 @@ const App = () => {
               key={activeProject.id} 
               project={activeProject} 
               onBack={() => setView('DASHBOARD')} 
-              onSave={actions.saveWork}
+              onSave={(data) => actions.saveWork({ ...data, type: WorkType.TABLE })}
               onNavigate={(target) => setProjectTab(target)}
             />
           );
@@ -74,17 +78,26 @@ const App = () => {
           );
         case 'CHAT':
           return (
-            <ProjectLog 
-              logs={workLogs} 
-              projectId={activeProject.id} 
-              projectName={activeProject.name} 
-              onBack={() => setProjectTab('MAP')} 
-              onAddNote={actions.addNote} 
+            <ChatScreen 
+              logs={workLogs}
+              currentUser={currentUser}
+              allWorkers={workers}
+              projects={projects}
+              initialChannelId={activeProject.id}
+              onClose={() => setProjectTab('MAP')} 
+              onAddMessage={actions.addNote} 
             />
           );
         case 'MENU':
           // Project Settings Context
-          return <Settings onBack={() => setProjectTab('MAP')} />;
+          return (
+            <ProjectSettings 
+              project={activeProject}
+              onUpdate={actions.updateProject}
+              onBack={() => setProjectTab('MAP')}
+              onExportLogs={() => actions.exportProjectData(activeProject.id)}
+            />
+          );
         default:
           return null;
       }
@@ -99,7 +112,23 @@ const App = () => {
 
   // --- 4. GLOBAL APP NAVIGATION (Root - WITH BOTTOM BAR) ---
   
+  const isGlobalChatOpen = globalTab === 'CHAT';
+
   const renderGlobalContent = () => {
+    // If Global Chat is open, render it ON TOP of dashboard/projects
+    if (isGlobalChatOpen) {
+      return (
+        <ChatScreen 
+           logs={workLogs} 
+           currentUser={currentUser}
+           allWorkers={workers}
+           projects={projects}
+           onClose={() => setGlobalTab('DASHBOARD')}
+           onAddMessage={actions.addNote}
+        />
+      );
+    }
+
     switch (globalTab) {
       case 'DASHBOARD':
         return (
@@ -136,15 +165,6 @@ const App = () => {
             onBack={() => setGlobalTab('DASHBOARD')} 
           />
         );
-      case 'CHAT':
-        // Global Chat
-        return (
-          <ProjectLog 
-            logs={workLogs} 
-            onAddNote={actions.addNote}
-            // No Back button in main tab
-          />
-        );
       default:
         return null;
     }
@@ -153,7 +173,14 @@ const App = () => {
   return (
     <div className="relative h-[100dvh] flex flex-col">
       {renderGlobalContent()}
-      <GlobalTabBar activeTab={globalTab} onSwitch={setGlobalTab} unreadCount={0} />
+      
+      {/* Tab Bar slides down when chat is open */}
+      <GlobalTabBar 
+        activeTab={globalTab} 
+        onSwitch={setGlobalTab} 
+        unreadCount={0} 
+        isVisible={!isGlobalChatOpen}
+      />
     </div>
   );
 };

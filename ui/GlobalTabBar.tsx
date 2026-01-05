@@ -6,9 +6,10 @@ interface GlobalTabBarProps {
   activeTab: GlobalTab;
   onSwitch: (tab: GlobalTab) => void;
   unreadCount?: number;
+  isVisible?: boolean; // New prop for visibility animation
 }
 
-export const GlobalTabBar: React.FC<GlobalTabBarProps> = ({ activeTab, onSwitch, unreadCount = 0 }) => {
+export const GlobalTabBar: React.FC<GlobalTabBarProps> = ({ activeTab, onSwitch, unreadCount = 0, isVisible = true }) => {
   const getTabClass = (tab: GlobalTab) => 
     `flex-1 flex flex-col items-center justify-center h-full transition-all duration-300 relative group active:scale-95
      ${activeTab === tab ? 'text-solar-start' : 'text-white/40 hover:text-white/60'}`;
@@ -17,7 +18,9 @@ export const GlobalTabBar: React.FC<GlobalTabBarProps> = ({ activeTab, onSwitch,
     `mb-1.5 p-1.5 rounded-xl transition-all duration-500 ${activeTab === tab ? 'bg-solar-start/10 shadow-[0_0_15px_rgba(34,211,238,0.25)] scale-110' : ''}`;
 
   return (
-    <div className="fixed bottom-0 left-0 w-full z-50">
+    <div 
+      className={`fixed bottom-0 left-0 w-full z-50 transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isVisible ? 'translate-y-0' : 'translate-y-[120%]'}`}
+    >
        {/* Deep Ocean Glass Background */}
        <div className="absolute inset-0 bg-midnight/85 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.6)]" />
        
