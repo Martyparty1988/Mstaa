@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Project, TableSize } from '../../domain';
+import { Project, TableSize } from '../../app/domain';
 import { Layout } from '../../ui/Layout';
 import { Button } from '../../ui/Button';
 

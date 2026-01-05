@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Project, ProjectMode, TableSize, WorkLog, WorkType, Table, TableStatus, Worker, WorkerRole, createPerformanceSnapshot, PerformanceSnapshot, AppBackup } from '../domain';
+import { Project, ProjectMode, TableSize, WorkLog, WorkType, Table, TableStatus, Worker, WorkerRole, createPerformanceSnapshot, PerformanceSnapshot, AppBackup } from './domain';
 import { storage, KEYS } from '../lib/storage';
 import { dataManager } from '../lib/dataManager';
 
@@ -11,6 +11,7 @@ export const useAppEngine = () => {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [workLogs, setWorkLogs] = useState<WorkLog[]>([]);
   const [workers, setWorkers] = useState<Worker[]>([]);
+  const [lastReadChat, setLastReadChat] = useState<number>(() => storage.get(KEYS.LAST_READ_CHAT, 0));
 
   // Load Persistence
   useEffect(() => {
@@ -54,6 +55,7 @@ export const useAppEngine = () => {
   useEffect(() => { storage.set(KEYS.PROJECTS, projects); }, [projects]);
   useEffect(() => { storage.set(KEYS.LOGS, workLogs); }, [workLogs]);
   useEffect(() => { storage.set(KEYS.WORKERS, workers); }, [workers]);
+  useEffect(() => { storage.set(KEYS.LAST_READ_CHAT, lastReadChat); }, [lastReadChat]);
 
   // --- Computed ---
   
@@ -65,7 +67,21 @@ export const useAppEngine = () => {
     return createPerformanceSnapshot(todaysLogs, activeProject?.settings);
   }, [workLogs, activeProject]);
 
+  const unreadChatCount = useMemo(() => {
+    return workLogs.filter(l => 
+      l.type === WorkType.HOURLY && 
+      (l.durationMinutes || 0) === 0 && 
+      l.note && 
+      l.workerId !== 'CURRENT_USER' &&
+      l.timestamp > lastReadChat
+    ).length;
+  }, [workLogs, lastReadChat]);
+
   // --- Actions ---
+
+  const markChatAsRead = () => {
+    setLastReadChat(Date.now());
+  };
 
   const createProject = (name: string, mode: ProjectMode, tables: Table[]) => {
     const newProject: Project = {
@@ -319,6 +335,7 @@ export const useAppEngine = () => {
     projects, activeProject,
     workers, workLogs,
     todaySnapshot,
+    unreadChatCount,
     actions: {
       createProject,
       selectProject,
@@ -335,7 +352,8 @@ export const useAppEngine = () => {
       fullReset,
       importAppState,
       getExportData,
-      downloadBackup
+      downloadBackup,
+      markChatAsRead
     }
   };
 };

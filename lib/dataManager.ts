@@ -1,4 +1,4 @@
-import { AppBackup, AppSchema, Project, WorkLog, Worker } from '../domain';
+import { AppBackup, AppSchema, Project, WorkLog, Worker } from '../app/domain';
 import { storage, KEYS } from './storage';
 
 const CURRENT_SCHEMA_VERSION = 1;

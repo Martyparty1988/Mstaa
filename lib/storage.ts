@@ -23,5 +23,6 @@ export const KEYS = {
   LOGS: 'mst_logs',
   WORKERS: 'mst_workers',
   LAST_WORKER: 'mst_last_worker',
-  LAST_TIMERANGE: 'mst_last_timerange'
+  LAST_TIMERANGE: 'mst_last_timerange',
+  LAST_READ_CHAT: 'mst_last_read_chat'
 };

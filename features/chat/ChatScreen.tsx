@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { WorkLog, WorkType, Worker, Project } from '../../domain';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { WorkLog, WorkType, Worker, Project } from '../../app/domain';
 import { ChannelList } from './components/ChannelList';
 import { ChatConversation } from './components/ChatConversation';
 
@@ -26,19 +26,26 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   onChannelSwitch
 }) => {
   const [activeChannelId, setActiveChannelId] = useState<string | null>(initialChannelId || null);
+  
+  // Use ref to avoid dependency cycles with onChannelSwitch if it's unstable
+  const notifySwitchRef = useRef(onChannelSwitch);
+  useEffect(() => { notifySwitchRef.current = onChannelSwitch; }, [onChannelSwitch]);
 
   useEffect(() => {
+    // Sync state on mount or prop change
     if (initialChannelId) {
       setActiveChannelId(initialChannelId);
-      // Notify parent if initial channel is set
-      if (onChannelSwitch) onChannelSwitch(initialChannelId);
+      if (notifySwitchRef.current) notifySwitchRef.current(initialChannelId);
+    } else {
+      // Ensure parent knows we are in list view if no initial ID
+      if (notifySwitchRef.current) notifySwitchRef.current(null);
     }
-  }, [initialChannelId, onChannelSwitch]);
+  }, [initialChannelId]);
 
   // Wrapper to sync local state and parent notification
   const handleChannelSwitch = (id: string | null) => {
     setActiveChannelId(id);
-    if (onChannelSwitch) onChannelSwitch(id);
+    if (notifySwitchRef.current) notifySwitchRef.current(id);
   };
 
   // --- DERIVED STATE FOR CONVERSATION ---

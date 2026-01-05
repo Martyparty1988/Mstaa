@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Table } from '../../domain';
+import { Table } from '../../app/domain';
 
 export type FieldSelection = {
   ids: Set<string>;

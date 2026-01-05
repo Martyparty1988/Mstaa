@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Table, TableSize, TableStatus, ProjectSettings, getStringsForSize, stringsToKwp } from '../../domain';
+import { Table, TableSize, TableStatus, ProjectSettings, getStringsForSize, stringsToKwp } from '../../app/domain';
 import { storage, KEYS } from '../../lib/storage';
 import { TimeRangePicker } from '../../ui/TimeRangePicker';
 

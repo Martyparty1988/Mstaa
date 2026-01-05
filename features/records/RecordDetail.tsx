@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { WorkLog, Worker, Project, TableSize, WorkType, calculateLogStrings, stringsToKwp } from '../../domain';
+import { WorkLog, Worker, Project, TableSize, WorkType, calculateLogStrings, stringsToKwp } from '../../app/domain';
 import { Button } from '../../ui/Button';
 
 interface RecordDetailProps {

@@ -1,5 +1,6 @@
+
 import React, { useMemo } from 'react';
-import { WorkLog, Worker, Project, calculateEarnings, WorkType } from '../../domain';
+import { WorkLog, Worker, Project, calculateEarnings, WorkType } from '../../app/domain';
 import { Layout } from '../../ui/Layout';
 
 interface WalletScreenProps {
@@ -105,7 +106,8 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ logs, currentUser, p
            <h3 className="text-xs font-bold text-white/40 uppercase tracking-[0.15em] ml-2 mb-3">Historie výdělků</h3>
            
            <div className="space-y-4">
-              {Object.entries(groupedHistory).map(([date, data]) => (
+              {/* Fix: Explicitly type cast Object.entries to avoid 'unknown' type errors for 'data.total' and 'data.logs' */}
+              {(Object.entries(groupedHistory) as [string, { total: number, logs: WorkLog[] }][]).map(([date, data]) => (
                 <div key={date} className="glass-base rounded-[24px] p-4 border border-white/5">
                    <div className="flex justify-between items-center mb-3 pb-3 border-b border-white/5">
                       <span className="font-bold text-white/70 capitalize text-sm">{date}</span>

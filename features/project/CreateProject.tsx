@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { ProjectMode, Table, TableSize, parseRawTableInput, generateTableRange, parseCSVImport } from '../../domain';
+import { ProjectMode, Table, TableSize, parseRawTableInput, generateTableRange, parseCSVImport } from '../../app/domain';
 import { Layout } from '../../ui/Layout';
 import { Button } from '../../ui/Button';
 

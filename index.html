@@ -6,57 +6,53 @@
     <meta name="theme-color" content="#020617" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="description" content="MST - Solar Construction Management" />
-    <title>MST - Marty Solar Tracker</title>
+    <meta name="description" content="MST - Marty Solar Tracker: High-performance solar construction management." />
+    
+    <!-- Stylized Hexagon Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%2322d3ee' d='M12 2l8.66 5v10L12 22l-8.66-5V7L12 2z'/><path fill='white' d='M4 11h16v2H4z'/></svg>" />
+    
+    <title>Marty Solar Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              // New 'Deep Ocean' Palette
-              midnight: "#020617", // Slate 950 - Richer, darker black/blue
-              surface: "#1e293b",  // Slate 800
-              surfaceHighlight: "#334155", // Slate 700
-              
-              // New Primary: Electric Cyan to Royal Blue
+              midnight: "#020617",
+              surface: "#1e293b",
+              surfaceHighlight: "#334155",
               solar: {
-                start: "#22d3ee", // Cyan-400 (Vibrant)
-                end: "#3b82f6",   // Blue-500 (Solid)
-                glow: "rgba(34, 211, 238, 0.5)" // Cyan Glow
+                start: "#22d3ee",
+                end: "#3b82f6",
+                glow: "rgba(34, 211, 238, 0.5)"
               },
-              
-              // Accents
-              electric: "#38bdf8", // Sky Blue
-              gold: "#fbbf24",     // Amber-400 (For Solar/Energy metrics)
-              success: "#34d399",  // Emerald-400
-              danger: "#f87171",   // Red-400
+              electric: "#38bdf8",
+              gold: "#fbbf24",
+              success: "#34d399",
+              danger: "#f87171",
             },
             backgroundImage: {
-              // Fresh, high-energy gradient
-              'solar-gradient': 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)', 
-              'active-gradient': 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)', // Amber/Orange
+              'solar-gradient': 'linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%)', 
               'glass-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
-              // Cleaner hero glass
-              'hero-glass': 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%)',
             },
             boxShadow: {
               'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.45)',
-              'glass-hero': '0 12px 48px 0 rgba(6, 182, 212, 0.25)',
               'glow': '0 0 25px rgba(34, 211, 238, 0.4)',
-              'inner-light': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.15)',
-            },
-            fontFamily: {
-              sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+              'specular': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.15), inset 1px 0 0 0 rgba(255, 255, 255, 0.05)',
             },
             animation: {
               'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'float': 'float 3s ease-in-out infinite',
+              'shimmer': 'shimmer 4s linear infinite',
+              'bounce-subtle': 'bounce-subtle 0.5s ease-out',
             },
             keyframes: {
-              float: {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-5px)' },
+              shimmer: {
+                '0%': { backgroundPosition: '-200% 0' },
+                '100%': { backgroundPosition: '200% 0' },
+              },
+              'bounce-subtle': {
+                '0%, 100%': { transform: 'scale(1)' },
+                '50%': { transform: 'scale(1.05)' },
               }
             }
           }
@@ -65,42 +61,48 @@
     </script>
     <style>
       body {
-        /* Deep Slate Gradient - Professional & Clean */
-        background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%);
+        background: radial-gradient(circle at top right, #0f172a, #020617);
         background-attachment: fixed;
         color: rgba(255, 255, 255, 0.95);
         -webkit-tap-highlight-color: transparent;
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
       }
-      /* Hide scrollbar for clean mobile look */
-      ::-webkit-scrollbar {
-        width: 0px;
-        background: transparent;
-      }
+      ::-webkit-scrollbar { width: 0px; background: transparent; }
       
-      /* Glassmorphism Classes */
       .glass-base {
         backdrop-filter: blur(24px) saturate(180%);
         -webkit-backdrop-filter: blur(24px) saturate(180%);
-        background: rgba(30, 41, 59, 0.4); /* Slate tint */
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+        background: rgba(30, 41, 59, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 8px 32px 0 rgba(0, 0, 0, 0.4);
       }
       
       .glass-hero {
-        backdrop-filter: blur(30px) saturate(200%);
-        -webkit-backdrop-filter: blur(30px) saturate(200%);
-        background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 12px 48px 0 rgba(6, 182, 212, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(32px) saturate(210%);
+        -webkit-backdrop-filter: blur(32px) saturate(210%);
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.2), 0 12px 48px 0 rgba(0, 0, 0, 0.5);
+      }
+
+      .solar-shimmer {
+        background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.05), transparent);
+        background-size: 200% 100%;
+        animation: shimmer 4s infinite;
       }
 
       .text-glow {
-        text-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
+        text-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
       }
-      
-      .text-shadow-hero {
-        text-shadow: 0 4px 20px rgba(6, 182, 212, 0.5);
+
+      .mask-gradient-bottom {
+        mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+      }
+
+      /* iOS Spring Animation */
+      .ios-spring {
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
     </style>
   <script type="importmap">

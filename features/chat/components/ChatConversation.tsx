@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { WorkLog, Worker } from '../../../domain';
+import { WorkLog, Worker } from '../../../app/domain';
 import { MessageBubble, GroupPosition } from './MessageBubble';
 
 interface ChatConversationProps {
@@ -19,7 +19,6 @@ const getAvatarColor = (name: string) => {
   return colors[Math.abs(hash) % colors.length];
 };
 
-// Date helper
 const isSameDay = (d1: number, d2: number) => {
   return new Date(d1).toDateString() === new Date(d2).toDateString();
 };
@@ -35,21 +34,16 @@ const formatDateSeparator = (ts: number) => {
   return d.toLocaleDateString();
 };
 
-// MODERATION LOGIC
 const validateMessage = (text: string): { valid: boolean; error?: string } => {
   const t = text.trim();
   if (!t) return { valid: false };
 
-  // 1. Block URLs
-  // Simple regex for detecting http/https/www
   const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
   if (urlRegex.test(t)) {
     return { valid: false, error: "Odkazy nejsou povoleny. Chat je pouze textový." };
   }
 
-  // 2. Block File Extensions (basic check)
   const fileRegex = /\.(jpg|jpeg|png|gif|pdf|doc|docx|zip|rar)$/i;
-  // Check if any word ends with extension
   const words = t.split(/\s+/);
   if (words.some(w => fileRegex.test(w))) {
     return { valid: false, error: "Názvy souborů nejsou povoleny. Posílejte pouze text." };
@@ -89,7 +83,6 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
       if (validation.error) {
         setErrorMsg(validation.error);
         if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-        // Clear error after 3s
         setTimeout(() => setErrorMsg(null), 3000);
       }
       return;
@@ -114,7 +107,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
                   <span className="text-[10px] text-white/40 font-bold uppercase tracking-widest">{subTitle}</span>
                </div>
             </div>
-            <div className="w-8" /> {/* Spacer for centering if needed, or close button */}
+            <div className="w-8" />
          </div>
       </div>
 
@@ -130,18 +123,12 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
            <div className="pb-2 pt-4">
              {logs.map((log, idx) => {
                const isMe = log.workerId === currentUser.id;
-               
-               // Grouping Logic
                const prevLog = logs[idx - 1];
                const nextLog = logs[idx + 1];
-
                const isSameUserPrev = prevLog && prevLog.workerId === log.workerId;
                const isSameUserNext = nextLog && nextLog.workerId === log.workerId;
-               
-               // Time gap check (5 minutes)
                const timeDiffPrev = prevLog ? (log.timestamp - prevLog.timestamp) / 1000 / 60 : 0;
                const timeDiffNext = nextLog ? (nextLog.timestamp - log.timestamp) / 1000 / 60 : 0;
-               
                const isGroupStart = !isSameUserPrev || timeDiffPrev > 5 || !isSameDay(prevLog.timestamp, log.timestamp);
                const isGroupEnd = !isSameUserNext || timeDiffNext > 5 || !isSameDay(nextLog.timestamp, log.timestamp);
 
@@ -177,40 +164,37 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
          )}
       </div>
 
-      {/* Input Area */}
-      <div className="absolute bottom-0 left-0 w-full bg-[#1e1e1e]/90 backdrop-blur-xl border-t border-white/5 pb-[env(safe-area-inset-bottom)] z-50">
+      {/* Input Area - Redesigned to match Midnight palette */}
+      <div className="absolute bottom-0 left-0 w-full bg-midnight/80 backdrop-blur-3xl border-t border-white/10 pb-[env(safe-area-inset-bottom)] z-50">
          
-         {/* Error Toast inside input area */}
          {errorMsg && (
-            <div className="absolute -top-12 left-0 w-full px-4 flex justify-center animate-slide-up">
-              <div className="bg-danger text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg border border-white/20">
+            <div className="absolute -top-14 left-0 w-full px-4 flex justify-center animate-slide-up">
+              <div className="bg-danger text-white text-[10px] font-black uppercase tracking-widest px-5 py-2.5 rounded-2xl shadow-glow border border-white/20">
                 {errorMsg}
               </div>
             </div>
          )}
 
-         <form onSubmit={handleSubmit} className="p-2 px-3 flex items-end gap-3">
+         <form onSubmit={handleSubmit} className="p-3 px-4 flex items-end gap-3">
             
-            {/* Plus button (Disabled/Visual only as per strict text rule) */}
-            <button type="button" disabled className="w-9 h-9 mb-1 rounded-full bg-white/10 text-white/20 flex items-center justify-center opacity-50 cursor-not-allowed">
-               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M12 3.75a.75.75 0 01.75.75v6.75h6.75a.75.75 0 010 1.5h-6.75v6.75a.75.75 0 01-1.5 0v-6.75H4.5a.75.75 0 010-1.5h6.75V4.5a.75.75 0 01.75-.75z" clipRule="evenodd" /></svg>
-            </button>
-
-            <div className="flex-1 bg-[#2c2c2e] rounded-[20px] border border-white/5 flex items-center min-h-[36px] my-1.5 px-1 focus-within:border-white/20 transition-colors">
+            <div className="flex-1 bg-white/5 backdrop-blur-md rounded-[24px] border border-white/10 flex items-center min-h-[44px] my-1.5 px-1 focus-within:border-solar-start/30 transition-all shadow-inner">
                <textarea 
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); }}}
                   rows={1}
-                  placeholder="iMessage"
-                  className="w-full bg-transparent text-white placeholder-white/30 text-[15px] px-3 py-1.5 focus:outline-none resize-none max-h-24 leading-snug"
-                  style={{ minHeight: '36px' }}
+                  placeholder="Napište zprávu..."
+                  className="w-full bg-transparent text-white placeholder-white/20 text-[15px] px-4 py-2.5 focus:outline-none resize-none max-h-32 leading-relaxed"
+                  style={{ minHeight: '44px' }}
                />
             </div>
             
             {note.trim().length > 0 && (
-              <button type="submit" className="w-9 h-9 mb-1.5 rounded-full bg-solar-start text-white flex items-center justify-center shadow-glow animate-scale-in">
-                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 translate-y-[-1px]"><path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>
+              <button 
+                type="submit" 
+                className="w-11 h-11 mb-2 rounded-2xl bg-solar-gradient text-white flex items-center justify-center shadow-glow active:scale-90 transition-transform ios-spring border border-white/20"
+              >
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 translate-x-0.5"><path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>
               </button>
             )}
          </form>

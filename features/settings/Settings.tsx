@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Layout } from '../../ui/Layout';
-import { Worker, WorkerRole, Project } from '../../domain';
+import { Worker, WorkerRole, Project } from '../../app/domain';
 
 interface SettingsProps {
   onBack: () => void;
@@ -10,7 +10,6 @@ interface SettingsProps {
   onResetApp: () => void;
   onImportApp: (json: string, mode: 'REPLACE' | 'MERGE') => void;
   onGetExportData: () => string;
-  // New:
   onDownloadBackup?: () => void;
 }
 

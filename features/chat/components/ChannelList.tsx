@@ -1,5 +1,5 @@
 import React from 'react';
-import { Project, Worker } from '../../../domain';
+import { Project, Worker } from '../../../app/domain';
 
 interface ChannelListProps {
   projects: Project[];

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppEngine } from './useAppEngine';
 
 // Feature Imports
@@ -13,7 +13,7 @@ import { Settings } from '../features/settings/Settings';
 import { ProjectSettings } from '../features/project/ProjectSettings';
 import { WalletScreen } from '../features/wallet/WalletScreen'; // Import Wallet
 import { GlobalTabBar, GlobalTab } from '../ui/GlobalTabBar';
-import { WorkType } from '../domain';
+import { WorkType } from './domain';
 
 // Extend GlobalTab type locally or just use string literal in state
 type ExtendedGlobalTab = GlobalTab | 'TEAM_GLOBAL' | 'WALLET';
@@ -25,6 +25,7 @@ const App = () => {
     projects, activeProject,
     workers, workLogs,
     todaySnapshot,
+    unreadChatCount,
     actions
   } = useAppEngine();
 
@@ -34,6 +35,14 @@ const App = () => {
   
   // Track specific chat conversation state for UI visibility
   const [globalChatId, setGlobalChatId] = useState<string | null>(null);
+
+  // Mark chat as read when user enters Chat tab or receives new message while in chat
+  useEffect(() => {
+    const isInChat = globalTab === 'CHAT' || (view === 'PROJECT_VIEW' && projectTab === 'CHAT');
+    if (isInChat) {
+      actions.markChatAsRead();
+    }
+  }, [globalTab, view, projectTab, workLogs.length]); // React to tab changes and new messages
 
   // Helper to handle routing
   const setView = (v: typeof view) => {
@@ -111,7 +120,6 @@ const App = () => {
             />
           );
         case 'RECORDS':
-          // The new Records Screen
           return (
             <RecordsScreen
               logs={workLogs}
@@ -124,7 +132,6 @@ const App = () => {
             />
           );
         case 'MENU':
-          // Project Settings Context
           return (
             <ProjectSettings 
               project={activeProject}
@@ -148,15 +155,10 @@ const App = () => {
   // --- 4. GLOBAL APP NAVIGATION (Root - WITH BOTTOM BAR) ---
   
   const isGlobalChatOpen = globalTab === 'CHAT';
-  
-  // Logic: Tab Bar is HIDDEN if (We are in Chat Tab AND a specific conversation is open) OR (We are in Team Global) OR (Wallet)
   const isTabBarVisible = !(isGlobalChatOpen && globalChatId !== null) && globalTab !== 'TEAM_GLOBAL' && globalTab !== 'WALLET';
-
-  // Cast back to specific type for TabBar props
   const activeTabBarTab = (globalTab === 'TEAM_GLOBAL' || globalTab === 'WALLET' ? 'DASHBOARD' : globalTab) as GlobalTab;
 
   const renderGlobalContent = () => {
-    // If Global Chat is open, render it ON TOP of dashboard/projects
     if (isGlobalChatOpen) {
       return (
         <ChatScreen 
@@ -208,7 +210,6 @@ const App = () => {
           />
         );
       case 'STATS':
-        // Global Stats
         return (
           <Stats 
             logs={workLogs} 
@@ -242,12 +243,10 @@ const App = () => {
   return (
     <div className="relative h-[100dvh] flex flex-col">
       {renderGlobalContent()}
-      
-      {/* Tab Bar slides down when specific chat conversation is open OR when viewing global team manager */}
       <GlobalTabBar 
         activeTab={activeTabBarTab} 
         onSwitch={(t) => setGlobalTab(t)} 
-        unreadCount={0} 
+        unreadCount={unreadChatCount} 
         isVisible={isTabBarVisible}
       />
     </div>

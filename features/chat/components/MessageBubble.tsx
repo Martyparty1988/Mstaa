@@ -1,5 +1,5 @@
 import React from 'react';
-import { WorkLog } from '../../../domain';
+import { WorkLog } from '../../../app/domain';
 
 export type GroupPosition = 'single' | 'top' | 'middle' | 'bottom';
 

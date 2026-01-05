@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Worker, WorkerRole } from '../../domain';
+import { Worker, WorkerRole } from '../../app/domain';
 import { Layout } from '../../ui/Layout';
 import { Button } from '../../ui/Button';
 

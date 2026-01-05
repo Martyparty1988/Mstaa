@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { WorkLog, Worker, calculatePerformance, Project, forecastCompletion } from '../../domain';
+import { WorkLog, Worker, calculatePerformance, Project, forecastCompletion } from '../../app/domain';
 import { Layout } from '../../ui/Layout';
 
 interface StatsProps {
