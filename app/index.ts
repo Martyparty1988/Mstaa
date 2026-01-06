@@ -1,35 +1,35 @@
 
 
 // --- TYPES ---
-export * from './types';
+export * from './domain/types';
 
 // --- RULES & CALCULATIONS ---
-export { 
-  getStringsForSize, 
-  stringsToKwp, 
+export {
+  getStringsForSize,
+  stringsToKwp,
   calculateLogStrings,
-  calculateTotalStringsFromTables 
-} from './rules';
+  calculateTotalStringsFromTables
+} from './domain/rules';
 
 // --- TABLE LOGIC ---
-export { 
-  parseTableId, 
-  groupTablesBySection, 
+export {
+  parseTableId,
+  groupTablesBySection,
   parseRawTableInput,
   sortTablesByOrder,
   generateTableRange,
   parseCSVImport
-} from './tables';
+} from './domain/tables';
 
 // --- PERFORMANCE & METRICS ---
-export { 
-  calculatePerformance, 
+export {
+  calculatePerformance,
   createPerformanceSnapshot,
-  forecastCompletion 
-} from './performance';
+  forecastCompletion
+} from './domain/performance';
 
 // --- ECONOMICS ---
 export {
   calculateLogEarnings,
   calculateEarnings
-} from './economics';
+} from './domain/economics';
